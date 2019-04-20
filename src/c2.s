@@ -420,6 +420,19 @@ ckdrx:         CP   1
 ckdv1:         LD   (drive),A
                RET
 
+sze:           PUSH HL
+               LD   (szea),A
+               LD   HL,size1
+               LD   A,(drive)
+               CP   1
+               JR   Z,sze1
+               INC  HL
+sze1:          LD   A,(HL)
+               CP   2
+               LD   A,(szea)
+               POP  HL
+               RET
+
 
 ;SELECT DISC AND SIDE
 
@@ -464,10 +477,15 @@ tfbf:          CALL grpnt
                LD   A,C
                CP   254
                RET  NZ
+               CALL sze
+               JR   Z,tfbf1
                LD   A,B
-               CP   1
+               CP   3
                RET
 
+tfbf1:         LD   A,B
+               CP   1
+               RET
 
 ;SAVE A BYTE ON DISC
 
@@ -554,7 +572,10 @@ ldb4:          CALL ctas
                EXX
                CALL commp
                LD   DE,510
-               LD   HL,(svhl)
+               CALL sze
+               JR   Z,ldb4a
+               LD   DE,1022
+ldb4a:         LD   HL,(svhl)
                JR   ldb6
 
 ldb5:          INC  C
@@ -622,7 +643,10 @@ ldb8:          CALL ldint
 
 ccnt:          LD   HL,(svde)
                LD   BC,510
-               SCF
+               CALL sze
+               JR   Z,ccnta
+               LD   BC,1022
+ccnta:         SCF
                SBC  HL,BC
                RET  NC
                LD   A,(pges1)
@@ -741,7 +765,10 @@ svb4:          CALL ctas
                EXX
                LD   HL,(svhl)
                LD   DE,510
-               CALL commp
+               CALL sze
+               JR   Z,svb4a
+               LD   DE,1022
+svb4a:         CALL commp
                JR   svb6
 
 svb5:          INC  C
@@ -845,8 +872,12 @@ fns1:          LD   A,(HL)
                LD   A,E
                ADD  8
                LD   E,A
-               SUB  10
-               JR   C,fns2
+               CALL sze
+               JR   Z,fns1a
+               SUB  5
+               JR   fns1b
+fns1a:         SUB  10
+fns1b:         JR   C,fns2
                JR   Z,fns2
                LD   E,A
                CALL fns5
@@ -1068,8 +1099,12 @@ fdhc:          LD   A,(IX)
 ;CALCULATE NEXT DIRECTORY ENTRY
 
 fdhd:          LD   A,(IX+rpth)
-               CP   1
-               JR   Z,fdhe
+               CALL sze
+               JR   Z,fdhd1
+               CP   3
+               JR   fdhd2
+fdhd1:         CP   1
+fdhd2:         JR   Z,fdhe
                CALL clrrpt
                INC  (IX+rpth)
                JP   fdh2
@@ -1264,8 +1299,12 @@ cfsm:          CALL grpnt
                AND  A
                JR   NZ,cfm1
                LD   A,B
-               CP   2
-               JR   Z,cfm2
+               CALL sze
+               JR   Z,cfsm1
+               CP   4
+               JR   cfsm2
+cfsm1:         CP   2
+cfsm2:         JR   Z,cfm2
 cfm1:          LD   (HL),0
                CALL incrpt
                JR   cfsm

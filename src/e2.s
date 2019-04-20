@@ -45,9 +45,15 @@ fmt3:          LD   C,wtrk
                DEC  E
                JR   NZ,fmt4
                LD   E,10
+               CALL sze
+               JR   Z,fmt4
+               LD   E,5
 fmt4:          DEC  E
                JR   NZ,fmt5
                LD   E,10
+               CALL sze
+               JR   Z,fmt5
+               LD   E,5
 fmt5:          JP   fmt1
 
 fmt6:          CALL restx
@@ -80,7 +86,10 @@ fmt8:          PUSH DE
 fmt9:          LD   (buf),HL
                CALL rsad
                LD   BC,512
-               ADD  HL,BC
+               CALL sze
+               JR   Z,fmt9a
+               LD   BC,1024
+fmt9a:         ADD  HL,BC
                CALL isect
                JR   NZ,fmt9
 
@@ -91,7 +100,10 @@ fmt9:          LD   (buf),HL
 fmt10:         LD   (buf),HL
                CALL wsad
                LD   BC,512
-               ADD  HL,BC
+               CALL sze
+               JR   Z,fmt10a
+               LD   BC,1024
+fmt10a:        ADD  HL,BC
                CALL isect
                JR   NZ,fmt10
 
@@ -163,6 +175,9 @@ itrck:         INC  D
 dmt1:          LD   BC,&3C4E
                CALL wfm
                LD   B,10
+               CALL sze
+               JR   Z,dmt2
+               LD   B,5
 dmt2:          PUSH BC
                LD   BC,&C00
                CALL wfm
@@ -186,7 +201,10 @@ dmt2:          PUSH BC
                LD   B,&01
                CALL wfm
                LD   BC,&0102
-               CALL wfm
+               CALL sze
+               JR   Z,dmt3
+               LD   BC,0103
+dmt3:          CALL wfm
                LD   BC,&01F7
                CALL wfm
                LD   BC,&164E
@@ -200,7 +218,12 @@ dmt2:          PUSH BC
                LD   BC,0
                CALL wfm
                CALL wfm
-               LD   BC,&01F7
+               CALL sze
+               JR   Z,dmt4
+               LD   BC,0
+               CALL wfm
+               CALL wfm
+dmt4:          LD   BC,&01F7
                CALL wfm
                LD   BC,&184E
                CALL wfm
@@ -225,7 +248,15 @@ wfm:           LD   (HL),C
 ;INCREMENT SECTOR ROUTINE
 
 isect:         INC  E
+               CALL sze
+               JR   Z,isect1
                LD   A,E
+               CP   6
+               RET  NZ
+               LD   E,1
+               RET
+
+isect1:        LD   A,E
                CP   11
                RET  NZ
                LD   E,1
@@ -336,7 +367,7 @@ drtab:         DEFB 1
                DEFB 4
                DEFM "ZX "
                DEFB 19
-               DEFM "c "
+               DEFM "C "
                DEFB 5
                DEFM "ZX SNP 48k"
                DEFB 6
@@ -481,8 +512,8 @@ pmo3:          CALL ptm
 
 pmo4:          CALL ptm
                DEFB &7F
-               DEFM " Miles Gordon Tec"
-               DEFM "hnology Plc  1"
+               DEFM " Sam Computers Lt"
+               DEFM "d.  Version  1"
                DEFW &8D0D
 
 pmo5:          CALL ptm
@@ -509,8 +540,8 @@ pmo9:          CALL ptm
                DEFB "y"+&80
 
 pmoa:          CALL ptm
-               DEFM "Format disk at "
-               DEFM "track "
+               DEFM "ALL FORMAT  AT "
+               DEFM "TRACK "
                DEFB " "+&80
 
 pmob:          CALL ptm

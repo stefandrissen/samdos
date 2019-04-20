@@ -1,4 +1,3 @@
-
                ORG  gnd
                DUMP gnd.bank,&0000
 
@@ -134,7 +133,7 @@ vers:          DEFB 01
 size1:         DEFB 2
 size2:         DEFB 3
 
-lspce:         DEFB 12
+szea:          DEFB 0
 lfeed:         DEFB 1
 lmarg:         DEFB 0
 graph:         DEFB 1
