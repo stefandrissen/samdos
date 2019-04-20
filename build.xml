@@ -6,15 +6,23 @@
 	<property name="simcoupe" location="C:\Program Files (x86)\SimCoupe\SimCoupe.exe" />
 	<property name="cmp" location="res/cmp_v1b/cmp.exe" />
 
-	<target name="compare" description="compare assembled with reference" depends="assemble">
+	<target name="compare" description="compare assembled with reference" depends="assemble" xmlns:unless="ant:unless">
 
 		<property name="file1" location="obj/samdos2" />
 		<property name="file2" location="res/samdos2.reference.bin" />
 
-		<exec executable="${cmp}">
+		<condition property="identical" value="true">
+			<filesmatch file1="${file1}" file2="${file2}" />
+		</condition>
+
+		<fail message="compiled file '${file1}' does not match reference binary '${file2}'" unless:true="${identical}" />
+
+		<!-- for binary compare
+			<exec executable="${cmp}">
 			<arg value="${file1}" />
 			<arg value="${file2}" />
-		</exec>
+		</exec> 
+		-->
 
 	</target>
 
@@ -22,12 +30,12 @@
 
 		<exec executable="${python}" failonerror="true">
 			<arg value="${pyz80}" />
-			<arg value="--obj=obj/samdos" />
-			<arg value="src/comp5.s" />
+			<arg value="--obj=obj/samdos2" />
+			<arg value="src/samdos.s" />
 		</exec>
 
 	</target>
-	
+
 	<target name="clean" description="clean obj">
 
 		<delete dir="obj" />
