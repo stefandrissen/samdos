@@ -1105,11 +1105,11 @@ fdhd:          LD   A,(IX+rpth)
                JR   fdhd2
 fdhd1:         CP   1
 fdhd2:         JR   Z,fdhe
-               CALL clrrpt
                INC  (IX+rpth)
                JP   fdh2
 
-fdhe:          CALL isect
+fdhe:          CALL clrrpt
+               CALL isect
                JP   NZ,fdh1
                INC  D
                LD   A,D

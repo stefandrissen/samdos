@@ -267,7 +267,10 @@ hrsad:         LD   A,(hka)
                CALL rsad
                LD   DE,dram
                LD   BC,512
-               LD   HL,(hkhl)
+               CALL sze
+               JR   Z,hrsd1
+               LD   BC,1024
+hrsd1:         LD   HL,(hkhl)
                CALL cals
                EX   DE,HL
                LDIR
@@ -283,7 +286,10 @@ hwsad:         LD   A,(hka)
                CALL ckdrx
                LD   DE,dram
                LD   BC,512
-               LD   HL,(hkhl)
+               CALL sze
+               JR   Z,hwsd1
+               LD   BC,1024
+hwsd1:         LD   HL,(hkhl)
                CALL cals
                LDIR
                LD   A,(port1)

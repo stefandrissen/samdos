@@ -23,7 +23,7 @@
 		<exec executable="${python}" failonerror="true">
 			<arg value="${pyz80}" />
 			<arg value="--obj=obj/samdos" />
-			<arg value="src/comp4.s" />
+			<arg value="src/comp5.s" />
 		</exec>
 
 	</target>
