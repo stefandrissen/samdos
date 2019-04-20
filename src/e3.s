@@ -203,7 +203,7 @@ dmt2:          PUSH BC
                LD   BC,&0102
                CALL sze
                JR   Z,dmt3
-               LD   BC,0103
+               LD   BC,&0103
 dmt3:          CALL wfm
                LD   BC,&01F7
                CALL wfm
