@@ -129,10 +129,11 @@ stprat:        DEFB 0
 stprt2:        DEFB 0
 chdir:         DEFB &20
 nstat:         DEFB 1
-vers:          DEFB 12
+vers:          DEFB 01
 
-width:         DEFB 80
-pcode:         DEFB 0
+size1:         DEFB 2
+size2:         DEFB 3
+
 lspce:         DEFB 12
 lfeed:         DEFB 1
 lmarg:         DEFB 0
@@ -556,3 +557,64 @@ rfhk:          XOR  A
 ;RESET ALL REGISTERS
 
 resreg:        LD   HL,tstr1
+               LD   BC,uifa-tstr1
+resr1:         LD   (HL),&FF
+               INC  HL
+               DEC  BC
+               LD   A,B
+               OR   C
+               JR   NZ,resr1
+               RET
+
+
+;COMMAND CODE TABLE
+
+samhk:         DEFW init      ;128
+               DEFW hgthd     ;129
+               DEFW hload     ;130
+               DEFW hvery     ;131
+               DEFW hsave     ;132
+               DEFW s         ;133
+               DEFW hopen     ;134
+               DEFW hclos     ;135
+               DEFW init      ;136
+               DEFW hdir      ;137
+               DEFW s         ;138
+               DEFW hvar      ;139
+               DEFW heof      ;140
+               DEFW hptr      ;141
+               DEFW hpath     ;142
+               DEFW s         ;143
+               DEFW s         ;144
+               DEFW s         ;145
+               DEFW s         ;146
+               DEFW hofle     ;147
+               DEFW sbyt      ;148
+               DEFW hwsad     ;149
+               DEFW hsvbk     ;150
+               DEFW s         ;151
+               DEFW cfsm      ;152
+               DEFW s         ;153
+               DEFW pntp      ;154
+               DEFW cops1     ;155
+               DEFW cops2     ;156
+               DEFW s         ;157
+               DEFW hgfle     ;158
+               DEFW lbyt      ;159
+               DEFW hrsad     ;160
+               DEFW hldbk     ;161
+               DEFW s         ;162
+               DEFW s         ;163
+               DEFW rest      ;164
+               DEFW pcat      ;165
+               DEFW heraz     ;166
+               DEFW s         ;167
+               DEFW s         ;168
+
+setbit:        PUSH AF
+               LD   A,1
+               CALL nrwr
+               DEFW var2+&01C3
+               POP  AF
+               RET
+

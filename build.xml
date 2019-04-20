@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="samdos">
+
+	<property name="python" location="d:/sam/python36/python.exe" />
+	<property name="pyz80" location="../pyz80/pyz80.py" />
+	<property name="simcoupe" location="C:\Program Files (x86)\SimCoupe\SimCoupe.exe" />
+	<property name="cmp" location="res/cmp_v1b/cmp.exe" />
+
+	<target name="compare" description="compare assembled with reference" depends="assemble">
+
+		<property name="file1" location="obj/samdos2" />
+		<property name="file2" location="res/samdos2.reference.bin" />
+
+		<exec executable="${cmp}">
+			<arg value="${file1}" />
+			<arg value="${file2}" />
+		</exec>
+
+	</target>
+
+	<target name="assemble">
+
+		<exec executable="${python}" failonerror="true">
+			<arg value="${pyz80}" />
+			<arg value="--obj=obj/samdos" />
+			<arg value="src/comp1.s" />
+		</exec>
+
+	</target>
+	
+	<target name="clean" description="clean obj">
+
+		<delete dir="obj" />
+		<mkdir dir="obj" />
+
+	</target>
+
+</project>
