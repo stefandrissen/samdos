@@ -6,8 +6,8 @@ trck:          EQU  225
 sect:          EQU  226
 dtrq:          EQU  227
 
-               DEFB 3
-               DEFW 0
+  	           DEFB 3	
+       	       DEFW 0
                DEFW 0
                DEFW 0
                DEFW 0
@@ -105,18 +105,6 @@ dos8:          DEC  HL
                LD   HL,&0144    ;device
                LD   (&5A06),HL
 
-               LD   DE,&4BA0
-               LD   HL,andy+&4000
-               LD   BC,andend-andy
-               LDIR
-
-               LD   HL,&4BA0
-               LD   (cmdv),HL
-
-               XOR  A
-               LD   (samcnt+&4000),A
-               LD   (&5BC3),A
-
                RET
 
 dvar:          EQU  $
@@ -132,7 +120,6 @@ vers:          DEFB 01
 
 size1:         DEFB 2
 size2:         DEFB 3
-
 szea:          DEFB 0
 lfeed:         DEFB 1
 lmarg:         DEFB 0
@@ -191,7 +178,6 @@ gcc1:          DEFB &1B,&2A,&05,&40
 
                ORG  gnd+&0100
                DUMP gnd.bank,&0100
-
 
                DEFM "BOO"
                DEFB "T"+&80
@@ -299,125 +285,15 @@ size:          EQU  zzend-gnd+&0220
 
                JP   syntax
 
+               JP   &50D4
 
                ORG  gnd+&0210
                DUMP gnd.bank,&0210
 
                DEFW errtbl+&4000
 
-
                ORG  gnd+&0220
                DUMP gnd.bank,&0220
-
-;origin at insbf
-
-data:          LD   (curcmd),A
-               CP   newtok
-               JR   Z,newp
-               CP   savtok
-               JR   Z,savp
-
-dirp:          RST  &20
-               RST  8
-               DEFB 29
-
-savp:          LD   HL,(chadd)
-               PUSH HL
-               RST  &20
-               POP  HL
-               SUB  ovrtok
-               LD   (overf),A
-               JR   Z,svp1
-               LD   (chadd),HL
-svp1:          LD   A,savtok
-               LD   HL,(comad)
-               SUB  &90
-               ADD  A,A
-               LD   D,0
-               LD   E,A
-               ADD  HL,DE
-
-svp2:          LD   C,250
-               IN   B,(C)
-               SET  6,B
-               OUT  (C),B
-               LD   E,(HL)
-               INC  HL
-               LD   D,(HL)
-               PUSH DE
-               RST  &20
-               RET
-
-newp:          LD   HL,insbf+newa-data
-               JR   svp2
-
-newa:          DEFW insbf+nnew-data
-
-nnew:          LD   A,(flags)
-               RLA
-               RET  NC
-               DI
-               LD   HL,(comad)
-               PUSH HL
-               LD   HL,(cmdv)
-               PUSH HL
-               LD   A,(dosflg)
-               LD   HL,var2
-               LD   DE,var2+1
-               LD   (HL),L
-               LD   BC,&029E
-               LDIR
-
-               LD   (dosflg),A
-               POP  HL
-               LD   (cmdv),HL
-               LD   HL,insbf+indev-data
-               LD   (&5AEE),HL
-               POP  HL
-               LD   DE,&3E
-               ADD  HL,DE
-               LD   E,(HL)
-               INC  HL
-               LD   D,(HL)
-               EX   DE,HL
-               LD   DE,17
-               ADD  HL,DE
-               JP   (HL)
-
-indev:         LD   HL,0
-               LD   (&5AEE),HL
-               LD   HL,&0144
-               LD   (&5A06),HL
-               RET
-
-datend:        EQU  $
-
-
-;BOOT LOAD TRAP FOR EXTENSIONS
-
-andy:          CP   newtok
-               JR   Z,andy1
-               CP   savtok
-               JR   Z,andy1
-               CP   dirtok
-               RET  NZ
-
-andy1:         POP  HL
-               PUSH AF
-               LD   HL,data+&4000
-               LD   BC,datend-data
-               IN   A,(251)
-               LD   D,A
-               LD   A,(dosflg)
-               OUT  (251),A
-               LD   A,D
-               LD   DE,insbf
-               LDIR
-               OUT  (251),A
-               POP  AF
-               JP   insbf
-
-andend:        EQU  $
 
 ;TEST FOR CODE ON ERROR
 

@@ -12,8 +12,7 @@
 ;     DATE  24.01.90
 
 
-;     DATE   4.07.91
-
+;     DATE  10.07.91
 
 gnd:           EQU  &4000
 gnd.bank:      EQU  1
@@ -129,7 +128,7 @@ wram:          EQU  275
 
 str:           EQU  gnd+&3EFE
 
-sam:           EQU  gnd+&3A00
+sam:           EQU  gnd+&3800
 
 dchan:         EQU  sam+195
 svbc:          EQU  dchan
@@ -147,6 +146,7 @@ fsa:           EQU  dchan+19
 
 dram:          EQU  fsa+256
 
-fndfr:         EQU  dram+512
+fndfr:         EQU  dram+1024
 fndts:         EQU  fndfr+1
 next:          EQU  fndts+2
+
