@@ -1,6 +1,6 @@
 # samdos
 
-Source code of samdos2. 
+Source code of samdos2, the standard disk operating system for the SAM Coupé.
 
 ### procedure
 The starting point was the source code at [ftp.nvg.ntnu.no/pub/sam-coupe/sources](ftp://ftp.nvg.ntnu.no/pub/sam-coupe/sources/SamDos2InCometFormatMasterv1.2.zip) which contains five versions (comp1.s through comp5.s).  These five versions have been uploaded over each other with the version numbers in the files being renamed to provide source history.
