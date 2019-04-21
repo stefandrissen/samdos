@@ -1,879 +1,879 @@
 
 ;ZX ENTRY INTO RAM SPACE
 
-calll:         CALL gtnc
-               CP   &AA      ;mode
-               JP   NZ,rep2
-               CALL gtnc
-               CALL evnum
-               CALL ceos
+calll:         call gtnc
+               cp &aa         ;mode
+               jp nz,rep2
+               call gtnc
+               call evnum
+               call ceos
 
-               LD   A,C
-               CP   0
-               JR   NZ,call1
-               LD   A,3
-               OUT  (251),A
-               LD   A,4
-               OUT  (252),A
-               DI
-               JP   &B914
+               ld a,c
+               cp 0
+               jr nz,call1
+               ld a,3
+               out (251),a
+               ld a,4
+               out (252),a
+               di
+               jp &b914
 
-call1:         CP   1
-               JP   NZ,rep2
-               LD   A,4
-               OUT  (252),A
-               JP   snap7
+call1:         cp 1
+               jp nz,rep2
+               ld a,4
+               out (252),a
+               jp snap7
 
 
 ;DISC COPY ROUTINE
 
-copy:          CALL gtnc
-               CALL evnam
-               CP   &8E       ;to
-               JP   NZ,rep2
-               CALL gtnc
-               CALL evnam2
-               CALL ceos
+copy:          call gtnc
+               call evnam
+               cp &8e         ;to
+               jp nz,rep2
+               call gtnc
+               call evnam2
+               call ceos
 
-               LD   HL,nstr1+1
-               CALL evfile
-               CALL ckdisc
+               ld hl,nstr1+1
+               call evfile
+               call ckdisc
 
-               CALL exdat
-               LD   HL,nstr1+1
-               CALL evfile
-               CALL ckdisc
-               LD   HL,nstr1+1
-               LD   DE,nstr3+1
-               LD   BC,14
-               LDIR
-               LD   A,(dstr1)
-               LD   B,A
-               LD   A,(dstr2)
-               CP   B
-               CALL Z,setf5
+               call exdat
+               ld hl,nstr1+1
+               call evfile
+               call ckdisc
+               ld hl,nstr1+1
+               ld de,nstr3+1
+               ld bc,14
+               ldir
+               ld a,(dstr1)
+               ld b,a
+               ld a,(dstr2)
+               cp b
+               call z,setf5
 
-copy1:         CALL exdat
-               CALL ckdrv
-               CALL fndfl
-               JR   C,copy2
+copy1:         call exdat
+               call ckdrv
+               call fndfl
+               jr c,copy2
 
-               CALL bitf0
-               JP   Z,rep26
-               JP   ends
+               call bitf0
+               jp z,rep26
+               jp ends
 
-copy2:         CALL gdifa
-               CALL rsad
-               CALL gtcop
-               CALL ldblk
+copy2:         call gdifa
+               call rsad
+               call gtcop
+               call ldblk
 
-               CALL exdat
-               CALL ckdrv
-               CALL bitf5
-               CALL NZ,tspce1
+               call exdat
+               call ckdrv
+               call bitf5
+               call nz,tspce1
 
-               CALL trx
-               CALL ofsm
-               CALL gtcop
-               CALL svblk
-               CALL cfsm
-               CALL setf0
-               CALL bitf5
-               CALL NZ,tspce2
-               JR   copy1
+               call trx
+               call ofsm
+               call gtcop
+               call svblk
+               call cfsm
+               call setf0
+               call bitf5
+               call nz,tspce2
+               jr copy1
 
 
-gtcop:         LD   A,3
-               OUT  (251),A
-               LD   HL,&8000
-               LD   A,(difa+34)
-               LD   (pges1),A
-               LD   DE,(difa+35)
-               RET
+gtcop:         ld a,3
+               out (251),a
+               ld hl,&8000
+               ld a,(difa+34)
+               ld (pges1),a
+               ld de,(difa+35)
+               ret
 
 
 ;CALL UP DIRECTORY
 
-dirx:          CALL gtdef
-               LD   A,"*"
-               LD   (nstr1+1),A
-               LD   A,2
-               LD   (sstr1),A
-               RET
+dirx:          call gtdef
+               ld a,"*"
+               ld (nstr1+1),a
+               ld a,2
+               ld (sstr1),a
+               ret
 
 
-dir:           CALL gtixd
-               CALL dirx
+dir:           call gtixd
+               call dirx
 
-               CALL gtnc
-               CALL ciel
-               JR   Z,cat1a
+               call gtnc
+               call ciel
+               jr z,cat1a
 
-               CP   "#"
-               JR   NZ,cat1
-               CALL evsrm
-               CALL separx
+               cp "#"
+               jr nz,cat1
+               call evsrm
+               call separx
 
-cat1:          CALL evdnm
+cat1:          call evdnm
 
-               CALL separ
-               CALL Z,evnam
-               CP   "!"
-               JR   NZ,cat2
-               CALL gtnc
+               call separ
+               call z,evnam
+               cp "!"
+               jr nz,cat2
+               call gtnc
 
-cat1a:         CALL ceos
+cat1a:         call ceos
 
-               CALL ckdrv
-               LD   A,2
-               JR   cat3
+               call ckdrv
+               ld a,2
+               jr cat3
 
-cat2:          CALL ceos
+cat2:          call ceos
 
-               XOR  A
-               CALL cmr
-               DEFW &014E  ;cls in sam
-               CALL ckdrv
-               LD   A,4
+               xor a
+               call cmr
+               defw &014e     ;cls in sam
+               call ckdrv
+               ld a,4
 
-cat3:          CALL pcat
-               JP   ends
+cat3:          call pcat
+               jp ends
 
 ;SETUP FOR DIRECTORY
 ;NSTR1+1,*
 ;SSTR1  ,2
 ;A WITH ,2 OR 4
 
-pcat:          PUSH AF
-               LD   A,(sstr1)
-               CALL cmr
-               DEFW stream
-               LD   A,&D
-               CALL pnt
+pcat:          push af
+               ld a,(sstr1)
+               call cmr
+               defw stream
+               ld a,&0d
+               call pnt
 
-               CALL pmo8
-               LD   A,(drive)
-               AND  3
-               OR   &30
-               CALL pnt
-               CALL pmo2
-               LD   HL,0
-               LD   (cnt),HL
-               POP  AF
-               CALL fdhr
-               CALL pmo3
-               CALL tstd
-               LD   HL,360
-               LD   DE,400
-               CP   40
-               JR   Z,trk2
-               CP   80
-               JR   Z,trk1
-               CP   168
-               JR   Z,trk1
-               LD   HL,1160
-trk1:          ADD  HL,DE
-trk2:          LD   DE,(cnt)
-               XOR  A
-               SBC  HL,DE
-               JR   NC,pct1
+               call pmo8
+               ld a,(drive)
+               and 3
+               or &30
+               call pnt
+               call pmo2
+               ld hl,0
+               ld (cnt),hl
+               pop af
+               call fdhr
+               call pmo3
+               call tstd
+               ld hl,360
+               ld de,400
+               cp 40
+               jr z,trk2
+               cp 80
+               jr z,trk1
+               cp 168
+               jr z,trk1
+               ld hl,1160
+trk1:          add hl,de
+trk2:          ld de,(cnt)
+               xor a
+               sbc hl,de
+               jr nc,pct1
 
-               ADD  HL,DE
-               EX   DE,HL
-               SBC  HL,DE
-               LD   A,"-"
-               CALL pnt
+               add hl,de
+               ex de,hl
+               sbc hl,de
+               ld a,"-"
+               call pnt
 
-pct1:          SRL  H
-               RR   L
-               XOR  A
-               CALL pnum4
-               LD   A,&D
-               CALL pnt
-               RET
+pct1:          srl h
+               rr l
+               xor a
+               call pnum4
+               ld a,&0d
+               call pnt
+               ret
 
 
 ;ERASE A FILE
 
-eraz:          CALL gtnc
-               CP   &A6      ;over
-               JR   NZ,eraz1
-               CALL setf1
-               CALL gtnc
+eraz:          call gtnc
+               cp &a6         ;over
+               jr nz,eraz1
+               call setf1
+               call gtnc
 
-eraz1:         CALL evnam
-               CALL ceos
+eraz1:         call evnam
+               call ceos
 
-               LD   HL,nstr1+1
-               CALL evfile
-               CALL ckdisc
+               ld hl,nstr1+1
+               call evfile
+               call ckdisc
 
-eraz3:         CALL fndfl
-               JR   NC,eraz5
-               CALL bitf1
-               JR   NZ,eraz4
+eraz3:         call fndfl
+               jr nc,eraz5
+               call bitf1
+               jr nz,eraz4
 
-               CALL point
-               LD   A,(HL)
-               BIT  6,A
-               JR   Z,eraz4
-               CALL beep
-               JR   eraz3
+               call point
+               ld a,(hl)
+               bit 6,a
+               jr z,eraz4
+               call beep
+               jr eraz3
 
-eraz4:         CALL point
-               LD   (HL),0
-               CALL wsad
-               CALL setf0
-               JR   eraz3
+eraz4:         call point
+               ld (hl),0
+               call wsad
+               call setf0
+               jr eraz3
 
-eraz5:         CALL bitf0
-               JP   Z,rep26
-               JP   ends
+eraz5:         call bitf0
+               jp z,rep26
+               jp ends
 
 
 ;FIND A FILE IN THE DIRECTORY
 
-fndfl:         CALL bitf2
-               JR   NZ,fndf4
-               CALL setf2
-               LD   IX,dchan
-               CALL rest
+fndfl:         call bitf2
+               jr nz,fndf4
+               call setf2
+               ld ix,dchan
+               call rest
 
-fndf1:         XOR  A
-               LD   (IX+4),A
-               LD   (fndfr),A
+fndf1:         xor a
+               ld (ix+4),a
+               ld (fndfr),a
 
-fndf2:         CALL rsad
-               LD   (fndts),DE
+fndf2:         call rsad
+               ld (fndts),de
 
-fndf3:         CALL clrrpt
-               LD   A,(fndfr)
-               LD   (IX+rpth),A
-               CALL grpnt
-               LD   A,(HL)
-               AND  A
-               JR   Z,fndf4
+fndf3:         call clrrpt
+               ld a,(fndfr)
+               ld (ix+rpth),a
+               call grpnt
+               ld a,(hl)
+               and a
+               jr z,fndf4
 
-               CALL cknam
-               JR   NZ,fndf4
-               SCF
-               RET
+               call cknam
+               jr nz,fndf4
+               scf
+               ret
 
-fndf4:         LD   DE,(fndts)
-               LD   A,(fndfr)
-               CP   1
-               JR   Z,fndf5
+fndf4:         ld de,(fndts)
+               ld a,(fndfr)
+               cp 1
+               jr z,fndf5
 
-               INC  A
-               LD   (fndfr),A
-               JR   fndf2
+               inc a
+               ld (fndfr),a
+               jr fndf2
 
-fndf5:         CALL isect
-               JR   NZ,fndf1
-               INC  D
-               LD   A,D
-               CP   4
-               RET  NC
-               JR   fndf1
+fndf5:         call isect
+               jr nz,fndf1
+               inc d
+               ld a,d
+               cp 4
+               ret nc
+               jr fndf1
 
 
 ;RENAME A FILE
 
-renam:         CALL gtnc
-               CALL evnam
-               CP   &8E       ;to
-               JP   NZ,rep2
-               CALL gtnc
-               CALL evnam2
-               CALL ceos
+renam:         call gtnc
+               call evnam
+               cp &8e         ;to
+               jp nz,rep2
+               call gtnc
+               call evnam2
+               call ceos
 
-               LD   HL,nstr1+1
-               CALL evfile
-               CALL ckdisc
+               ld hl,nstr1+1
+               call evfile
+               call ckdisc
 
-               CALL exdat
-               LD   HL,nstr1+1
-               CALL evfile
-               CALL ckdisc
+               call exdat
+               ld hl,nstr1+1
+               call evfile
+               call ckdisc
 
-               CALL findc
-               JP   Z,rep28
-               CALL exdat
+               call findc
+               jp z,rep28
+               call exdat
 
-               CALL findc
-               JP   NZ,rep26
-               INC  HL
-               PUSH DE
-               LD   DE,nstr2+1
-               EX   DE,HL
-               LD   BC,10
-               LDIR
-               POP  DE
-               CALL wsad
-               JP   ends
+               call findc
+               jp nz,rep26
+               inc hl
+               push de
+               ld de,nstr2+1
+               ex de,hl
+               ld bc,10
+               ldir
+               pop de
+               call wsad
+               jp ends
 
 
 ;FIND A FILE ROUTINE
 
-findc:         LD   A,&10
-               CALL fdhr
-               JP   point
+findc:         ld a,&10
+               call fdhr
+               jp point
 
 
 ;PROTECT ROUTINE
 
-prot:          LD   A,&40
-               JR   sfbt
+prot:          ld a,&40
+               jr sfbt
 
 ;HIDE FILE ROUTINE
 
-hide:          LD   A,&80
+hide:          ld a,&80
 
-sfbt:          LD   (hstr1),A
-               CALL gtnc
-               CP   &89       ;off
-               JR   NZ,sfb1
-               CALL setf1
-               CALL gtnc
+sfbt:          ld (hstr1),a
+               call gtnc
+               cp &89         ;off
+               jr nz,sfb1
+               call setf1
+               call gtnc
 
-sfb1:          CALL evnam
-               CALL ceos
+sfb1:          call evnam
+               call ceos
 
-               LD   HL,nstr1+1
-               CALL evfile
-               CALL ckdisc
+               ld hl,nstr1+1
+               call evfile
+               call ckdisc
 
-sfb2:          CALL fndfl
-               JR   C,sfb3
-               CALL bitf0
-               JP   Z,rep26
-               JP   ends
+sfb2:          call fndfl
+               jr c,sfb3
+               call bitf0
+               jp z,rep26
+               jp ends
 
-sfb3:          LD   (IX+rptl),0
-               CALL grpnt
-               LD   A,(hstr1)
-               LD   C,A
-               CPL
-               LD   B,A
-               LD   A,(HL)
-               AND  B
-               CALL bitf1
-               JR   NZ,sfb4
-               OR   C
-sfb4:          LD   (HL),A
-               CALL wsad
-               CALL setf0
-               JR   sfb2
+sfb3:          ld (ix+rptl),0
+               call grpnt
+               ld a,(hstr1)
+               ld c,a
+               cpl
+               ld b,a
+               ld a,(hl)
+               and b
+               call bitf1
+               jr nz,sfb4
+               or c
+sfb4:          ld (hl),a
+               call wsad
+               call setf0
+               jr sfb2
 
 
 
 ;SEPARATOR REPORT ROUTINE
 
-separx:        CALL separ
-               RET  Z
-               JP   rep2
+separx:        call separ
+               ret z
+               jp rep2
 
 
 ;THE SEPARATOR SUBROUTINE
 
-separ:         CP   ","
-               JR   Z,sepa1
-               CP   ";"
-               JR   Z,sepa1
-               CP   ""
-               RET
+separ:         cp ","
+               jr z,sepa1
+               cp ";"
+               jr z,sepa1
+               cp ""
+               ret
 
-sepa1:         CALL gtnc
-               LD   (sva),A
-               XOR  A
-               LD   A,(sva)
-               RET
+sepa1:         call gtnc
+               ld (sva),a
+               xor a
+               ld a,(sva)
+               ret
 
 
 
 ;EVALUATE PARAMETERS IN SYNTAX
 
-evprm:         CALL gtnc
+evprm:         call gtnc
 
-               CP   &87       ;at
-               JP   NZ,rep2
+               cp &87         ;at
+               jp nz,rep2
 
 ;GET DRIVE NUMBER
 
-               CALL gtnc
-               CALL evdnm
+               call gtnc
+               call evdnm
 
 ;GET TRACK NUMBER
 
-               CALL separx
-               CALL evnum
-               JR   Z,evpr1
+               call separx
+               call evnum
+               jr z,evpr1
 
-               LD   D,C
-               LD   (hkde),DE
+               ld d,c
+               ld (hkde),de
 
 ;GET SECTOR NUMBER
 
-evpr1:         CALL separx
-               CALL evnum
-               JR   Z,evpr2
+evpr1:         call separx
+               call evnum
+               jr z,evpr2
 
-               LD   DE,(hkde)
-               LD   E,C
-               LD   (hkde),DE
+               ld de,(hkde)
+               ld e,c
+               ld (hkde),de
 
 ;GET ADDRESS
 
-evpr2:         CALL separx
-               CALL evnum
-               JR   Z,evpr3
+evpr2:         call separx
+               call evnum
+               jr z,evpr3
 
-               LD   (hkhl),BC
+               ld (hkhl),bc
 
-evpr3:         CALL ceos
+evpr3:         call ceos
 
-               LD   A,(dstr1)
-               LD   (hka),A
-               RET
+               ld a,(dstr1)
+               ld (hka),a
+               ret
 
 
 ;SAVE HEADER INFORMATION
 
-svhd:          LD   HL,hd001
-               LD   DE,fsa+211
-               LD   B,9
-svhd1:         LD   A,(HL)
-               LD   (DE),A
-               CALL sbyt
-               INC  HL
-               INC  DE
-               DJNZ svhd1
-               RET
+svhd:          ld hl,hd001
+               ld de,fsa+211
+               ld b,9
+svhd1:         ld a,(hl)
+               ld (de),a
+               call sbyt
+               inc hl
+               inc de
+               djnz svhd1
+               ret
 
 
 ;WRITE AT A TRACK AND SECTOR
 
-write:         CALL gtixd
-               CALL evprm
+write:         call gtixd
+               call evprm
 
-               CALL hwsad
-               JP   ends
+               call hwsad
+               jp ends
 
 
 ;READ AT A TRACK AND SECTOR
 
-read:          CALL gtixd
-               CALL evprm
+read:          call gtixd
+               call evprm
 
-               CALL hrsad
-               JP   ends
+               call hrsad
+               jp ends
 
 
 ;LOAD HEADER INFORMATION
 
-ldhd:          LD   B,9
-ldhd1:         CALL lbyt
-               DJNZ ldhd1
-               RET
+ldhd:          ld b,9
+ldhd1:         call lbyt
+               djnz ldhd1
+               ret
 
 
 ;LOAD SYNTAX COMMAND
 
-load:          CALL gtixd
-               CALL gtnc
-               CALL evnum
+load:          call gtixd
+               call gtnc
+               call evnum
 
-               PUSH AF
-               LD   A,C
-               LD   (fstr1),A
-               CALL gtdef
-               POP  AF
-               CALL ceos
+               push af
+               ld a,c
+               ld (fstr1),a
+               call gtdef
+               pop af
+               call ceos
 
-               CALL gtfle
-autox:         LD   A,(difa)
-               CP   &14
-               JR   NZ,dlvm1
-               CALL bitf7
-               JR   Z,dlvm1
+               call gtfle
+autox:         ld a,(difa)
+               cp &14
+               jr nz,dlvm1
+               call bitf7
+               jr z,dlvm1
 
 ;48k SNAPSHOT IS FOUND
 
-               LD   DE,(svde)
-               CALL rsad
+               ld de,(svde)
+               call rsad
 
-               IN   A,(250)
-               LD   (snprt0),A
-               IN   A,(251)
-               LD   (snprt1),A
-               IN   A,(252)
-               LD   (snprt2),A
+               in a,(250)
+               ld (snprt0),a
+               in a,(251)
+               ld (snprt1),a
+               in a,(252)
+               ld (snprt2),a
 
-               LD   A,%00000100
-               OUT  (251),A
-               OUT  (252),A
+               ld a,%00000100
+               out (251),a
+               out (252),a
 
-               LD   SP,str-20
-               LD   HL,&8000
-               LD   DE,16384
-               LD   A,2
-               LD   (pges1),A
-               CALL ldblk
-               JP   snap7
+               ld sp,str-20
+               ld hl,&8000
+               ld de,16384
+               ld a,2
+               ld (pges1),a
+               call ldblk
+               jp snap7
 
-dlvm1:         CP   &10
-               JR   NZ,dlvm2
-               CALL bitf7
-               JP   NZ,rep13
+dlvm1:         cp &10
+               jr nz,dlvm2
+               call bitf7
+               jp nz,rep13
 
-               CALL nrrdd
-               DEFW prog
-               PUSH BC
-               POP  HL
+               call nrrdd
+               defw prog
+               push bc
+               pop hl
 
-               CALL nrrd
-               DEFW progp
-               LD   (uifa+31),A
-               LD   (uifa+32),HL
-               EX   DE,HL
-               LD   C,A
+               call nrrd
+               defw progp
+               ld (uifa+31),a
+               ld (uifa+32),hl
+               ex de,hl
+               ld c,a
 
-               PUSH BC
-               CALL nrrdd
-               DEFW eline
-               PUSH BC
-               POP  HL
+               push bc
+               call nrrdd
+               defw eline
+               push bc
+               pop hl
 
-               CALL nrrd
-               DEFW elinp
+               call nrrd
+               defw elinp
 
-               POP  BC
-               DEC  HL
-               BIT  7,H
-               JR   NZ,lab2
-               DEC  A
-lab2:          PUSH BC
-               PUSH DE
-               CALL ahln
-               PUSH AF
-               EX   DE,HL
-               LD   A,C
-               CALL ahln
-               EX   DE,HL
-               LD   C,A
-               POP  AF
-               AND  A
-               SBC  HL,DE
-               SBC  A,C
-               POP  DE
-               POP  BC
-               RL   H
-               RLA
-               RL   H
-               RLA
-               RR   H
-               SCF
-               RR   H
-               LD   (uifa+34),A
-               LD   (uifa+35),HL
-               XOR  A
-               LD   (uifa+15),A
+               pop bc
+               dec hl
+               bit 7,h
+               jr nz,lab2
+               dec a
+lab2:          push bc
+               push de
+               call ahln
+               push af
+               ex de,hl
+               ld a,c
+               call ahln
+               ex de,hl
+               ld c,a
+               pop af
+               and a
+               sbc hl,de
+               sbc a,c
+               pop de
+               pop bc
+               rl h
+               rla
+               rl h
+               rla
+               rr h
+               scf
+               rr h
+               ld (uifa+34),a
+               ld (uifa+35),hl
+               xor a
+               ld (uifa+15),a
 
-dlvm2:         CALL txinf
-               CALL txhed
-               JP   endsx
+dlvm2:         call txinf
+               call txhed
+               jp endsx
 
 
-ahln:          RLC  H
-               RLC  H
-               RRA
-               RR   H
-               RRA
-               RR   H
-               AND  7
-               RET
+ahln:          rlc h
+               rlc h
+               rra
+               rr h
+               rra
+               rr h
+               and 7
+               ret
 
 
 ;WRITE FORMAT ON DISC
 
-wfod:          CALL gtnc
-               CP   &8E       ;to
-               JR   Z,wfod1
-               CALL ciel
-               JR   Z,wfod2
+wfod:          call gtnc
+               cp &8e         ;to
+               jr z,wfod1
+               call ciel
+               jr z,wfod2
 
-               CALL evnam
+               call evnam
 
-               CP   &8E       ;to
-               JR   NZ,wfod2
-wfod1:         LD   (hstr1),A
+               cp &8e         ;to
+               jr nz,wfod2
+wfod1:         ld (hstr1),a
 
-               CALL gtnc
-               CALL evnam2
+               call gtnc
+               call evnam2
 
-wfod2:         CALL ceos
+wfod2:         call ceos
 
-               LD   HL,nstr1+1
-               CALL evfile
-               CALL ckdisc
+               ld hl,nstr1+1
+               call evfile
+               call ckdisc
 
-               LD   A,(hstr1)
-               CP   &8E
-               JR   NZ,wfod3
+               ld a,(hstr1)
+               cp &8e
+               jr nz,wfod3
 
-               CALL exdat
-               LD   HL,nstr1+1
-               CALL evfile
-               CALL ckdisc
-               CALL exdat
+               call exdat
+               ld hl,nstr1+1
+               call evfile
+               call ckdisc
+               call exdat
 
 
-wfod3:         CALL pmo6
-               CALL cyes
-               JP   NZ,ends
+wfod3:         call pmo6
+               call cyes
+               jp nz,ends
 
-               CALL dfmt
-               JP   ends
+               call dfmt
+               jp ends
 
 
 ;CHECK VALID SPECIFIER DISC
 
-ckdisc:        LD   A,(lstr1)
-               CP   "D"
-               RET  Z
-               JP   rep10
+ckdisc:        ld a,(lstr1)
+               cp "D"
+               ret z
+               jp rep10
 
 ;EVALUATE DRIVE NUMBER
 
-evdnm:         CALL evnum
-               RET  Z
+evdnm:         call evnum
+               ret z
 
-               PUSH AF
-               LD   A,C
-               LD   (dstr1),A
-               POP  AF
-               RET
+               push af
+               ld a,c
+               ld (dstr1),a
+               pop af
+               ret
 
 
 ;EVALUATE STREAM INFORMATION
 
-evsrm:         CALL gtnc
-evsrmx:        CALL evnum
-               RET  Z
+evsrm:         call gtnc
+evsrmx:        call evnum
+               ret z
 
-               PUSH AF
-               LD   A,C
-               CP   16
-               JP   NC,rep9
-               LD   (sstr1),A
-               POP  AF
-               RET
+               push af
+               ld a,c
+               cp 16
+               jp nc,rep9
+               ld (sstr1),a
+               pop af
+               ret
 
 
 ;EVALUATE NUMBER ROUTINE
 
-evnum:         CALL cmr
-               DEFW expnum
-               CALL cfso
-               RET  Z
+evnum:         call cmr
+               defw expnum
+               call cfso
+               ret z
 
-               PUSH AF
-               CALL cmr
-               DEFW getint
-               POP  AF
-               RET
+               push af
+               call cmr
+               defw getint
+               pop af
+               ret
 
 
-               ORG  &5BC8
-               DUMP gnd.bank,&1BC8
+               org &5bc8
+               dump gnd.bank,&1bc8
 
 
 ;EVALUATE CHANNEL SPECIFIER
 
-evsp:          CALL gtnc
-evspx:         CALL evstr
-               JR   Z,evsp1
+evsp:          call gtnc
+evspx:         call evstr
+               jr z,evsp1
 
-               PUSH AF
-               LD   A,C
-               DEC  A
-               OR   B
-               JP   NZ,rep10
+               push af
+               ld a,c
+               dec a
+               or b
+               jp nz,rep10
 
-               EX   DE,HL
-               CALL cmr
-               DEFW nrread
-               CALL alpha
-               JP   NC,rep10
+               ex de,hl
+               call cmr
+               defw nrread
+               call alpha
+               jp nc,rep10
 
-               LD   (lstr1),A
-               POP  AF
+               ld (lstr1),a
+               pop af
 
-evsp1:         CP   ";"
-               RET  Z
-               CP   ","
-               RET  Z
-               JP   rep0
+evsp1:         cp ";"
+               ret z
+               cp ","
+               ret z
+               jp rep0
 
 
 
 
 ;EVALUATE SECOND FILE NAME
 
-evnam2:        CALL exdat
-               CALL evnam
+evnam2:        call exdat
+               call evnam
 
-exdat:         PUSH AF
-               PUSH BC
-               PUSH DE
-               PUSH HL
+exdat:         push af
+               push bc
+               push de
+               push hl
 
-               LD   B,28
-               LD   DE,dstr1
-               LD   HL,dstr2
-exdt1:         LD   A,(DE)
-               LD   C,(HL)
-               EX   DE,HL
-               LD   (DE),A
-               LD   (HL),C
-               INC  DE
-               INC  HL
-               DJNZ exdt1
+               ld b,28
+               ld de,dstr1
+               ld hl,dstr2
+exdt1:         ld a,(de)
+               ld c,(hl)
+               ex de,hl
+               ld (de),a
+               ld (hl),c
+               inc de
+               inc hl
+               djnz exdt1
 
-               POP  HL
-               POP  DE
-               POP  BC
-               POP  AF
-               RET
+               pop hl
+               pop de
+               pop bc
+               pop af
+               ret
 
 
 ;EVALUATE FILE NAME
 
-evnam:         CALL evstr
-               RET  Z
+evnam:         call evstr
+               ret z
 
-               PUSH AF
-               LD   A,C
-               OR   B
-               JP   Z,rep8
+               push af
+               ld a,c
+               or b
+               jp z,rep8
 
-               LD   HL,14
-               SBC  HL,BC
-               JP   C,rep8
+               ld hl,14
+               sbc hl,bc
+               jp c,rep8
 
-               LD   HL,nstr1
-               LD   A,15
-evnm1:         LD   (HL),&20
-               INC  HL
-               DEC  A
-               JR   NZ,evnm1
+               ld hl,nstr1
+               ld a,15
+evnm1:         ld (hl),&20
+               inc hl
+               dec a
+               jr nz,evnm1
 
-               LD   HL,nstr1+1
-               EX   DE,HL
+               ld hl,nstr1+1
+               ex de,hl
 
-               IN   A,(251)
-               PUSH AF
-               LD   A,(svc)
-               AND  &1F
-               OUT  (251),A
-               LDIR
-               POP  AF
-               OUT  (251),A
+               in a,(251)
+               push af
+               ld a,(svc)
+               and &1f
+               out (251),a
+               ldir
+               pop af
+               out (251),a
 
-               POP  AF
-               RET
+               pop af
+               ret
 
 
 ;EVALUATE STRING EXPRESSION
 
-evstr:         CALL cmr
-               DEFW expstr
-               CALL cfso
-               RET  Z
+evstr:         call cmr
+               defw expstr
+               call cfso
+               ret z
 
-               PUSH AF
-               CALL cmr
-               DEFW getstr
-               LD   (svc),A
-               POP  AF
-               RET
+               push af
+               call cmr
+               defw getstr
+               ld (svc),a
+               pop af
+               ret
 
 
 ;CHECK FOR ALPHA CHAR
 
-alpha:         CP   &41
-               CCF
-               RET  NC
-               CP   &5B
-               RET  C
-               CP   &61
-               CCF
-               RET  NC
-               CP   &7B
-               RET
+alpha:         cp &41
+               ccf
+               ret nc
+               cp &5b
+               ret c
+               cp &61
+               ccf
+               ret nc
+               cp &7b
+               ret
 
 
 ;CHECK FOR NUMBER
 
-number:        SUB  &30
-               CP   10
-               RET  NC
-               JP   rep11
+number:        sub &30
+               cp 10
+               ret nc
+               jp rep11
 
 
 ;TRANSFER FILE NAMES IN COPY
 
-trx:           LD   HL,difa
-               LD   DE,nstr1
-               LD   BC,15
-               LDIR
+trx:           ld hl,difa
+               ld de,nstr1
+               ld bc,15
+               ldir
 
-               LD   HL,nstr3+1
-               LD   DE,nstr1+1
-               LD   B,10
+               ld hl,nstr3+1
+               ld de,nstr1+1
+               ld b,10
 
-trx1:          LD   A,(HL)
-               CP   "*"
-               JR   Z,trx3
-               CP   "?"
-               JR   Z,trx2
-               LD   (DE),A
-trx2:          INC  HL
-               INC  DE
-               DJNZ trx1
-               RET
+trx1:          ld a,(hl)
+               cp "*"
+               jr z,trx3
+               cp "?"
+               jr z,trx2
+               ld (de),a
+trx2:          inc hl
+               inc de
+               djnz trx1
+               ret
 
-trx3:          INC  HL
-               LD   A,(HL)
-               CP   "."
-               RET  NZ
-trx4:          LD   A,(DE)
-               CP   "."
-               JR   Z,trx2
-               INC  DE
-               DJNZ trx4
-               RET
+trx3:          inc hl
+               ld a,(hl)
+               cp "."
+               ret nz
+trx4:          ld a,(de)
+               cp "."
+               jr z,trx2
+               inc de
+               djnz trx4
+               ret
 
-gdifa:         CALL point
-               LD   DE,difa
-               LD   BC,11
-               LDIR
-               LD   B,4
-               CALL lcnta
-               LD   (IX+rptl),220
-               CALL grpnt
-               LD   BC,33
-               LDIR
+gdifa:         call point
+               ld de,difa
+               ld bc,11
+               ldir
+               ld b,4
+               call lcnta
+               ld (ix+rptl),220
+               call grpnt
+               ld bc,33
+               ldir
 
-               LD   HL,difa
-               LD   DE,uifa
-               LD   BC,48
-               LDIR
+               ld hl,difa
+               ld de,uifa
+               ld bc,48
+               ldir
 
-               LD   (IX+rptl),13
-               CALL grpnt
-               LD   D,(HL)
-               INC  HL
-               LD   E,(HL)
-               RET
+               ld (ix+rptl),13
+               call grpnt
+               ld d,(hl)
+               inc hl
+               ld e,(hl)
+               ret
 

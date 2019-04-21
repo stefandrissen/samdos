@@ -1,580 +1,580 @@
 
 ;DISC FORMAT ROUTINE
 
-dfmt:          DI
-               CALL gtixd
-               CALL ckdrv
-               CALL seld
+dfmt:          di
+               call gtixd
+               call ckdrv
+               call seld
 
-               LD   B,10
-dfmta:         PUSH BC
-               CALL instp
-               POP  BC
-               DJNZ dfmta
+               ld b,10
+dfmta:         push bc
+               call instp
+               pop bc
+               djnz dfmta
 
-               CALL restx
+               call restx
 
-               CALL getscr
+               call getscr
 
-fmt1:          LD   HL,ftadd
-               CALL dmt1
+fmt1:          ld hl,ftadd
+               call dmt1
 
-               PUSH DE
-               CALL cmr
-               DEFW clslow
-               CALL pmoa
-               POP  DE
-               PUSH DE
-               CALL sctrk
-               POP  DE
+               push de
+               call cmr
+               defw clslow
+               call pmoa
+               pop de
+               push de
+               call sctrk
+               pop de
 
-fmt3:          LD   C,wtrk
-               CALL precmp
-               LD   HL,ftadd
-               CALL wrdata
-               CALL stpdel
-               INC  D
+fmt3:          ld c,wtrk
+               call precmp
+               ld hl,ftadd
+               call wrdata
+               call stpdel
+               inc d
 
-               CALL tstd
-               CP   D
-               JR   Z,fmt7
-               AND  &7F
-               CP   D
-               JR   Z,fmt6
-               CALL instp
-               DEC  E
-               JR   NZ,fmt4
-               LD   E,10
-               CALL sze
-               JR   Z,fmt4
-               LD   E,5
-fmt4:          DEC  E
-               JR   NZ,fmt5
-               LD   E,10
-               CALL sze
-               JR   Z,fmt5
-               LD   E,5
-fmt5:          JP   fmt1
+               call tstd
+               cp d
+               jr z,fmt7
+               and &7f
+               cp d
+               jr z,fmt6
+               call instp
+               dec e
+               jr nz,fmt4
+               ld e,10
+               call sze
+               jr z,fmt4
+               ld e,5
+fmt4:          dec e
+               jr nz,fmt5
+               ld e,10
+               call sze
+               jr z,fmt5
+               ld e,5
+fmt5:          jp fmt1
 
-fmt6:          CALL restx
-               LD   D,&80
-               CALL seld
-               JP   fmt1
+fmt6:          call restx
+               ld d,&80
+               call seld
+               jp fmt1
 
-fmt7:          CALL rest
+fmt7:          call rest
 
-               LD   A,(dstr2)
-               CP   &FF
-               JR   Z,fmt11a
+               ld a,(dstr2)
+               cp &ff
+               jr z,fmt11a
 
-               LD   HL,(buf)
-               LD   (svbuf),HL
+               ld hl,(buf)
+               ld (svbuf),hl
 
-fmt8:          PUSH DE
-               CALL cmr
-               DEFW clslow
-               CALL pmob
-               POP  DE
-               PUSH DE
-               CALL sctrk
-               POP  DE
+fmt8:          push de
+               call cmr
+               defw clslow
+               call pmob
+               pop de
+               push de
+               call sctrk
+               pop de
 
-               LD   A,(dstr2)
-               CALL ckdrx
-               LD   HL,ftadd
+               ld a,(dstr2)
+               call ckdrx
+               ld hl,ftadd
 
-fmt9:          LD   (buf),HL
-               CALL rsad
-               LD   BC,512
-               CALL sze
-               JR   Z,fmt9a
-               LD   BC,1024
-fmt9a:         ADD  HL,BC
-               CALL isect
-               JR   NZ,fmt9
+fmt9:          ld (buf),hl
+               call rsad
+               ld bc,512
+               call sze
+               jr z,fmt9a
+               ld bc,1024
+fmt9a:         add hl,bc
+               call isect
+               jr nz,fmt9
 
-               LD   A,(dstr1)
-               CALL ckdrx
-               LD   HL,ftadd
+               ld a,(dstr1)
+               call ckdrx
+               ld hl,ftadd
 
-fmt10:         LD   (buf),HL
-               CALL wsad
-               LD   BC,512
-               CALL sze
-               JR   Z,fmt10a
-               LD   BC,1024
-fmt10a:        ADD  HL,BC
-               CALL isect
-               JR   NZ,fmt10
+fmt10:         ld (buf),hl
+               call wsad
+               ld bc,512
+               call sze
+               jr z,fmt10a
+               ld bc,1024
+fmt10a:        add hl,bc
+               call isect
+               jr nz,fmt10
 
-               CALL itrck
-               JR   NZ,fmt8
+               call itrck
+               jr nz,fmt8
 
-               LD   HL,(svbuf)
-               LD   (buf),HL
-               JR   fmt12
+               ld hl,(svbuf)
+               ld (buf),hl
+               jr fmt12
 
 
-fmt11:         CALL rsad
-               CALL isect
-               JR   NZ,fmt11
+fmt11:         call rsad
+               call isect
+               jr nz,fmt11
 
-fmt11a:        PUSH DE
-               CALL cmr
-               DEFW clslow
-               CALL pmoc
-               POP  DE
-               PUSH DE
-               CALL sctrk
-               POP  DE
-               CALL itrck
-               JR   NZ,fmt11
+fmt11a:        push de
+               call cmr
+               defw clslow
+               call pmoc
+               pop de
+               push de
+               call sctrk
+               pop de
+               call itrck
+               jr nz,fmt11
 
-fmt12:         CALL cmr
-               DEFW clslow
-               LD   HL,ftadd
-               CALL putscr
-               EI
-               JP   rest
+fmt12:         call cmr
+               defw clslow
+               ld hl,ftadd
+               call putscr
+               ei
+               jp rest
 
 
 ;PRINT TRACK ON SCREEN
 
-sctrk:         LD   A,D
-               BIT  7,A
-               JR   Z,strk1
-               AND  &7F
-               LD   B,A
-               CALL tstd
-               AND  &7F
-               ADD  B
+sctrk:         ld a,d
+               bit 7,a
+               jr z,strk1
+               and &7f
+               ld b,a
+               call tstd
+               and &7f
+               add b
 
-strk1:         LD   L,A
-               LD   H,0
-               LD   A,&20
-               JP   pnum3
+strk1:         ld l,a
+               ld h,0
+               ld a,&20
+               jp pnum3
 
 
 ;INCREMENT TRACK
 
-itrck:         INC  D
-               CALL tstd
-               CP   D
-               RET  Z
-               AND  &7F
-               CP   D
-               RET  NZ
-               CALL rest
-               LD   D,&80
-               CP   D
-               RET
+itrck:         inc d
+               call tstd
+               cp d
+               ret z
+               and &7f
+               cp d
+               ret nz
+               call rest
+               ld d,&80
+               cp d
+               ret
 
 
 ;DOUBLE DENSITY FORMAT
 
-dmt1:          LD   BC,&3C4E
-               CALL wfm
-               LD   B,10
-               CALL sze
-               JR   Z,dmt2
-               LD   B,5
-dmt2:          PUSH BC
-               LD   BC,&C00
-               CALL wfm
-               LD   BC,&03F5
-               CALL wfm
-               LD   BC,&01FE
-               CALL wfm
-               LD   A,D
-               AND  &7F
-               LD   C,A
-               LD   B,&01
-               CALL wfm
-               LD   A,D
-               AND  &80
-               RLCA
-               LD   C,A
-               LD   B,1
-               CALL wfm
-               LD   C,E
-               CALL isect
-               LD   B,&01
-               CALL wfm
-               LD   BC,&0102
-               CALL sze
-               JR   Z,dmt3
-               LD   BC,&0103
-dmt3:          CALL wfm
-               LD   BC,&01F7
-               CALL wfm
-               LD   BC,&164E
-               CALL wfm
-               LD   BC,&C00
-               CALL wfm
-               LD   BC,&03F5
-               CALL wfm
-               LD   BC,&01FB
-               CALL wfm
-               LD   BC,0
-               CALL wfm
-               CALL wfm
-               CALL sze
-               JR   Z,dmt4
-               LD   BC,0
-               CALL wfm
-               CALL wfm
-dmt4:          LD   BC,&01F7
-               CALL wfm
-               LD   BC,&184E
-               CALL wfm
-               POP  BC
-               DEC  B
-               JP   NZ,dmt2
-               LD   BC,&004E
-               CALL wfm
-               CALL wfm
-               JP   wfm
+dmt1:          ld bc,&3c4e
+               call wfm
+               ld b,10
+               call sze
+               jr z,dmt2
+               ld b,5
+dmt2:          push bc
+               ld bc,&0c00
+               call wfm
+               ld bc,&03f5
+               call wfm
+               ld bc,&01fe
+               call wfm
+               ld a,d
+               and &7f
+               ld c,a
+               ld b,&01
+               call wfm
+               ld a,d
+               and &80
+               rlca
+               ld c,a
+               ld b,1
+               call wfm
+               ld c,e
+               call isect
+               ld b,&01
+               call wfm
+               ld bc,&0102
+               call sze
+               jr z,dmt3
+               ld bc,&0103
+dmt3:          call wfm
+               ld bc,&01f7
+               call wfm
+               ld bc,&164e
+               call wfm
+               ld bc,&0c00
+               call wfm
+               ld bc,&03f5
+               call wfm
+               ld bc,&01fb
+               call wfm
+               ld bc,0
+               call wfm
+               call wfm
+               call sze
+               jr z,dmt4
+               ld bc,0
+               call wfm
+               call wfm
+dmt4:          ld bc,&01f7
+               call wfm
+               ld bc,&184e
+               call wfm
+               pop bc
+               dec b
+               jp nz,dmt2
+               ld bc,&004e
+               call wfm
+               call wfm
+               jp wfm
 
 
 
 ;WRITE FORMAT IN MEMORY
 
-wfm:           LD   (HL),C
-               INC  HL
-               DJNZ wfm
-               RET
+wfm:           ld (hl),c
+               inc hl
+               djnz wfm
+               ret
 
 
 ;INCREMENT SECTOR ROUTINE
 
-isect:         INC  E
-               CALL sze
-               JR   Z,isect1
-               LD   A,E
-               CP   6
-               RET  NZ
-               LD   E,1
-               RET
+isect:         inc e
+               call sze
+               jr z,isect1
+               ld a,e
+               cp 6
+               ret nz
+               ld e,1
+               ret
 
-isect1:        LD   A,E
-               CP   11
-               RET  NZ
-               LD   E,1
-               RET
+isect1:        ld a,e
+               cp 11
+               ret nz
+               ld e,1
+               ret
 
 
 ;PRINT TYPE OF FILE
 
-pntyp:         AND  &1F
-               PUSH AF
-               LD   HL,drtab
-               LD   BC,drtbx-drtab
-               CPIR
+pntyp:         and &1f
+               push af
+               ld hl,drtab
+               ld bc,drtbx-drtab
+               cpir
 
-pnty1:         LD   A,(HL)
-               CP   32
-               JR   C,pnty2
-               CALL pnt
-               INC  HL
-               JR   pnty1
+pnty1:         ld a,(hl)
+               cp 32
+               jr c,pnty2
+               call pnt
+               inc hl
+               jr pnty1
 
-pnty2:         POP  AF
-               CP   16
-               JR   NZ,pnty3
-               LD   (IX+rptl),242
-               CALL grpnt
-               LD   A,(HL)
-               AND  &C0
-               JR   NZ,pnty5
-               INC  HL
-               LD   E,(HL)
-               INC  HL
-               LD   D,(HL)
-               EX   DE,HL
-               CALL pnum5
-               JR   pnty5
+pnty2:         pop af
+               cp 16
+               jr nz,pnty3
+               ld (ix+rptl),242
+               call grpnt
+               ld a,(hl)
+               and &c0
+               jr nz,pnty5
+               inc hl
+               ld e,(hl)
+               inc hl
+               ld d,(hl)
+               ex de,hl
+               call pnum5
+               jr pnty5
 
-pnty3:         CP   19
-               JR   NZ,pnty4
-               LD   (IX+rptl),236
-               CALL grpnt
-               CALL gtval
-               INC  C
-               EX   DE,HL
-               PUSH DE
-               LD   A,&20
-               CALL pnum6
-               LD   A,","
-               CALL pnt
-               POP  HL
-               CALL gtval
-               EX   DE,HL
-               XOR  A
-               CALL pnum6
+pnty3:         cp 19
+               jr nz,pnty4
+               ld (ix+rptl),236
+               call grpnt
+               call gtval
+               inc c
+               ex de,hl
+               push de
+               ld a,&20
+               call pnum6
+               ld a,","
+               call pnt
+               pop hl
+               call gtval
+               ex de,hl
+               xor a
+               call pnum6
 
-pnty4:         CP   4
-               JR   NZ,pnty5
-               LD   (IX+rptl),215
-               CALL grpnt
-               LD   D,(HL)
-               DEC  HL
-               LD   E,(HL)
-               EX   DE,HL
-               PUSH DE
-               CALL pnum5
-               LD   A,","
-               CALL pnt
-               POP  HL
-               DEC  HL
-               LD   D,(HL)
-               DEC  HL
-               LD   E,(HL)
-               EX   DE,HL
-               XOR  A
-               CALL pnum5x
+pnty4:         cp 4
+               jr nz,pnty5
+               ld (ix+rptl),215
+               call grpnt
+               ld d,(hl)
+               dec hl
+               ld e,(hl)
+               ex de,hl
+               push de
+               call pnum5
+               ld a,","
+               call pnt
+               pop hl
+               dec hl
+               ld d,(hl)
+               dec hl
+               ld e,(hl)
+               ex de,hl
+               xor a
+               call pnum5x
 
-pnty5:         LD   A,&D
-               JP   pnt
+pnty5:         ld a,&0d
+               jp pnt
 
 
 ;GET NUMBER FROM HEADER
 
-gtval:         LD   A,(HL)
-               AND  &1F
-               LD   C,A
-               INC  HL
-               LD   E,(HL)
-               INC  HL
-               LD   A,(HL)
-               AND  &7F
-               LD   D,A
-               INC  HL
-               RET
+gtval:         ld a,(hl)
+               and &1f
+               ld c,a
+               inc hl
+               ld e,(hl)
+               inc hl
+               ld a,(hl)
+               and &7f
+               ld d,a
+               inc hl
+               ret
 
 
-drtab:         DEFB 1
-               DEFM "ZX BASIC"
-               DEFB 16
-               DEFM "BASIC "
-               DEFB 2
-               DEFM "ZX D.ARRAY"
-               DEFB 17
-               DEFM "D.ARRAY"
-               DEFB 3
-               DEFM "ZX $.ARRAY"
-               DEFB 18
-               DEFM "$.ARRAY"
-               DEFB 4
-               DEFM "ZX "
-               DEFB 19
-               DEFM "C "
-               DEFB 5
-               DEFM "ZX SNP 48k"
-               DEFB 6
-               DEFM "MD.FILE"
-               DEFB 7
-               DEFM "ZX SCREEN$"
-               DEFB 20
-               DEFM "SCREEN$"
-               DEFB 8
-               DEFM "SPECIAL"
-               DEFB 9
-               DEFM "ZX SNP 128k"
-               DEFB 10
-               DEFM "OPENTYPE"
-               DEFB 11
-               DEFM "N/A EXECUTE"
-               DEFB 12
-drtbx:         DEFM "WHAT?"
-               DEFB 0
+drtab:         defb 1
+               defm "ZX BASIC"
+               defb 16
+               defm "BASIC "
+               defb 2
+               defm "ZX D.ARRAY"
+               defb 17
+               defm "D.ARRAY"
+               defb 3
+               defm "ZX $.ARRAY"
+               defb 18
+               defm "$.ARRAY"
+               defb 4
+               defm "ZX "
+               defb 19
+               defm "C "
+               defb 5
+               defm "ZX SNP 48k"
+               defb 6
+               defm "MD.FILE"
+               defb 7
+               defm "ZX SCREEN$"
+               defb 20
+               defm "SCREEN$"
+               defb 8
+               defm "SPECIAL"
+               defb 9
+               defm "ZX SNP 128k"
+               defb 10
+               defm "OPENTYPE"
+               defb 11
+               defm "N/A EXECUTE"
+               defb 12
+drtbx:         defm "WHAT?"
+               defb 0
 
 
 ;PRINT NUMBER IN HL
 
-pnum6:         LD   (sva),A
-               XOR  A
-               LD   DE,0
+pnum6:         ld (sva),a
+               xor a
+               ld de,0
 
-               RR   C
-               RR   D
-               RR   C
-               RR   D
-               LD   A,D
-               ADD  H
-               LD   H,A
-               LD   A,C
-               ADC  E
-               LD   B,A
-               LD   DE,34464
-               LD   C,1       ;65536
-               LD   A,(sva)
-               CALL pnm2
-               JR   pnum5y
+               rr c
+               rr d
+               rr c
+               rr d
+               ld a,d
+               add h
+               ld h,a
+               ld a,c
+               adc e
+               ld b,a
+               ld de,34464
+               ld c,1         ;65536
+               ld a,(sva)
+               call pnm2
+               jr pnum5y
 
-pnum5:         LD   A,&20
+pnum5:         ld a,&20
 
-pnum5x:        LD   B,0
-pnum5y:        LD   C,0
-               LD   DE,10000
-               CALL pnm2
-pnum4:         LD   DE,1000
-               CALL pnm1
-pnum3:         LD   DE,100
-               CALL pnm1
-pnum2:         LD   DE,10
-               CALL pnm1
-pnum1:         LD   A,L
-               ADD  &30
-               JR   pnt
+pnum5x:        ld b,0
+pnum5y:        ld c,0
+               ld de,10000
+               call pnm2
+pnum4:         ld de,1000
+               call pnm1
+pnum3:         ld de,100
+               call pnm1
+pnum2:         ld de,10
+               call pnm1
+pnum1:         ld a,l
+               add &30
+               jr pnt
 
-pnm1:          LD   BC,0
-pnm2:          PUSH AF
-               LD   A,B
-               LD   B,0
-               AND  A
+pnm1:          ld bc,0
+pnm2:          push af
+               ld a,b
+               ld b,0
+               and a
 
-pnm3:          SBC  HL,DE
-               SBC  A,C
-               JR   C,pnm4
-               INC  B
-               JR   pnm3
-pnm4:          ADD  HL,DE
-               ADC  A,C
-               LD   C,A
-               LD   A,B
-               LD   B,C
-               AND  A
-               JR   NZ,pnm5
+pnm3:          sbc hl,de
+               sbc a,c
+               jr c,pnm4
+               inc b
+               jr pnm3
+pnm4:          add hl,de
+               adc a,c
+               ld c,a
+               ld a,b
+               ld b,c
+               and a
+               jr nz,pnm5
 
-               POP  DE
-               ADD  D
-               RET  Z
-               JR   pnt
+               pop de
+               add d
+               ret z
+               jr pnt
 
-pnm5:          ADD  &30
-               CALL pnt
-               POP  DE
-               LD   A,&30
-               RET
+pnm5:          add &30
+               call pnt
+               pop de
+               ld a,&30
+               ret
 
 
 
 ;PRINT TEXT MESSAGE
 
-ptm:           POP  HL
-ptm2:          LD   A,(HL)
-               AND  &7F
-               CALL pnt
-               BIT  7,(HL)
-               RET  NZ
-               INC  HL
-               JR   ptm2
+ptm:           pop hl
+ptm2:          ld a,(hl)
+               and &7f
+               call pnt
+               bit 7,(hl)
+               ret nz
+               inc hl
+               jr ptm2
 
 ;SEND A SPACE CHARACTER
 
-spc:           LD   A,&20
+spc:           ld a,&20
 
 ;OUTPUT A CHAR TO CURRENT CHAN
 
-pnt:           PUSH AF
-               PUSH BC
-               PUSH DE
-               PUSH HL
-               PUSH IX
+pnt:           push af
+               push bc
+               push de
+               push hl
+               push ix
 
-               CALL cmr
-               DEFW &0010
+               call cmr
+               defw &0010
 
-               POP  IX
-               POP  HL
-               POP  DE
-               POP  BC
-               POP  AF
-               RET
+               pop ix
+               pop hl
+               pop de
+               pop bc
+               pop af
+               ret
 
 
 ;SCREEN ROUTINES
 
-pmo1:          CALL ptm
-               DEFM "Tape ready ? "
-               DEFM "press SPACE ."
-               DEFB "."+128
+pmo1:          call ptm
+               defm "Tape ready ? "
+               defm "press SPACE ."
+               defb "."+128
 
-pmo2:          CALL ptm
-               DEFM " - DIRECTORY *"
-               DEFW &8D0D
+pmo2:          call ptm
+               defm " - DIRECTORY *"
+               defw &8d0d
 
-pmo3:          CALL ptm
-               DEFW &D0D
-               DEFM "Number of Free "
-               DEFM "K-Bytes ="
-               DEFB &A0
+pmo3:          call ptm
+               defw &0d0d
+               defm "Number of Free "
+               defm "K-Bytes ="
+               defb &a0
 
-pmo4:          CALL ptm
-               DEFB &7F
-               DEFM " Sam Computers Lt"
-               DEFM "d.  Version  1"
-               DEFW &8D0D
+pmo4:          call ptm
+               defb &7f
+               defm " Sam Computers Lt"
+               defm "d.  Version  1"
+               defw &8d0d
 
-pmo5:          CALL ptm
-               DEFM "OVERWRITE "
-               DEFB "'"+128
+pmo5:          call ptm
+               defm "OVERWRITE "
+               defb "'"+128
 
-pmo6:          CALL ptm
-               DEFM "Are you SURE ?"
-               DEFM " (y/n"
-               DEFB ")"+128
+pmo6:          call ptm
+               defm "Are you SURE ?"
+               defm " (y/n"
+               defb ")"+128
 
-pmo7:          CALL ptm
-               DEFM "' (y/n"
-               DEFB ")"+128
+pmo7:          call ptm
+               defm "' (y/n"
+               defb ")"+128
 
-pmo8:          CALL ptm
-               DEFM "  * SAM DRIVE "
-               DEFB &A0
+pmo8:          call ptm
+               defm "  * SAM DRIVE "
+               defb &a0
 
-pmo9:          CALL ptm
-               DEFB &D
-               DEFM "Enter source disk "
-               DEFM "press any ke"
-               DEFB "y"+&80
+pmo9:          call ptm
+               defb &0d
+               defm "Enter source disk "
+               defm "press any ke"
+               defb "y"+&80
 
-pmoa:          CALL ptm
-               DEFM "ALL FORMAT  AT "
-               DEFM "TRACK "
-               DEFB " "+&80
+pmoa:          call ptm
+               defm "ALL FORMAT  AT "
+               defm "TRACK "
+               defb " "+&80
 
-pmob:          CALL ptm
-               DEFM "Copy   disk at "
-               DEFM "track "
-               DEFB " "+&80
+pmob:          call ptm
+               defm "Copy   disk at "
+               defm "track "
+               defb " "+&80
 
-pmoc:          CALL ptm
-               DEFM "Verify disk at "
-               DEFM "track "
-               DEFB " "+&80
+pmoc:          call ptm
+               defm "Verify disk at "
+               defm "track "
+               defb " "+&80
 
-pmod:          CALL ptm
-               DEFM "Enter target disk "
-               DEFM "press any ke"
-               DEFB "y"+&80
+pmod:          call ptm
+               defm "Enter target disk "
+               defm "press any ke"
+               defb "y"+&80
 
 
-tspce1:        CALL cmr
-               DEFW clslow
-               CALL pmod
-tspc1:         CALL cmr
-               DEFW rdkey
-               JR   NC,tspc1
-tspc2:         CALL cmr
-               DEFW rdkey
-               JR   C,tspc2
-               CALL cmr
-               DEFW clslow
-               RET
+tspce1:        call cmr
+               defw clslow
+               call pmod
+tspc1:         call cmr
+               defw rdkey
+               jr nc,tspc1
+tspc2:         call cmr
+               defw rdkey
+               jr c,tspc2
+               call cmr
+               defw clslow
+               ret
 
-tspce2:        CALL cmr
-               DEFW clslow
-               CALL pmo9
-               JR   tspc1
+tspce2:        call cmr
+               defw clslow
+               call pmo9
+               jr tspc1
 

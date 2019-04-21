@@ -1,743 +1,743 @@
 
-min:           EQU  191
-mto:           EQU  223
+min:           equ 191
+mto:           equ 223
 
 
 ;MOVE COMMAND
 
-move:          CALL evmov
-               CP   204
-               JP   NZ,rep0
-               CALL exdat
-               CALL evmov
-               CALL exdat
-               CALL ceos
+move:          call evmov
+               cp 204
+               jp nz,rep0
+               call exdat
+               call evmov
+               call exdat
+               call ceos
 
-               CALL setf2
+               call setf2
 
-               LD   A,min
-               LD   (fstr1),A
-               CALL opmov
-               LD   HL,(chans)
-               PUSH HL
-               LD   A,(fstr1)
-               LD   (nstr2),A
-               CALL exdat
-               LD   A,mto
-               LD   (fstr1),A
-               LD   IX,dchan
-               CALL opmov
-               JR   NC,mova
+               ld a,min
+               ld (fstr1),a
+               call opmov
+               ld hl,(chans)
+               push hl
+               ld a,(fstr1)
+               ld (nstr2),a
+               call exdat
+               ld a,mto
+               ld (fstr1),a
+               ld ix,dchan
+               call opmov
+               jr nc,mova
 
-               LD   IX,(nstr2)
-               CALL rclmx
-               POP  HL
-               POP  HL
-               JP   ends
+               ld ix,(nstr2)
+               call rclmx
+               pop hl
+               pop hl
+               jp ends
 
-mova:          CALL exdat
-               POP  DE
-               LD   HL,(chans)
-               OR   A
-               SBC  HL,DE
-               LD   DE,(nstr1)
-               ADD  HL,DE
-               LD   (nstr1),HL
+mova:          call exdat
+               pop de
+               ld hl,(chans)
+               or a
+               sbc hl,de
+               ld de,(nstr1)
+               add hl,de
+               ld (nstr1),hl
 
-move1:         LD   HL,(nstr1)
-               LD   (curchl),HL
-move2:         CALL cmr
-               DEFW &15E6
-               JR   C,move3
-               JR   Z,move2
-               JR   move4
+move1:         ld hl,(nstr1)
+               ld (curchl),hl
+move2:         call cmr
+               defw &15e6
+               jr c,move3
+               jr z,move2
+               jr move4
 
-move3:         LD   HL,(nstr2)
-               LD   (curchl),HL
-               CALL cmr
-               DEFW &15F2
-               JR   move1
+move3:         ld hl,(nstr2)
+               ld (curchl),hl
+               call cmr
+               defw &15f2
+               jr move1
 
-move4:         XOR  A
-               LD   (flag3),A
-               LD   HL,(chans)
-               PUSH HL
-               CALL exdat
-               CALL clmov
-               CALL exdat
-               POP  DE
-               LD   HL,(chans)
-               OR   A
-               SBC  HL,DE
-               LD   DE,(nstr1)
-               ADD  HL,DE
-               LD   (nstr1),HL
-               CALL clmov
-               CALL cltemp
-               JP   ends
+move4:         xor a
+               ld (flag3),a
+               ld hl,(chans)
+               push hl
+               call exdat
+               call clmov
+               call exdat
+               pop de
+               ld hl,(chans)
+               or a
+               sbc hl,de
+               ld de,(nstr1)
+               add hl,de
+               ld (nstr1),hl
+               call clmov
+               call cltemp
+               jp ends
 
 
 ;RECLAIM A CHANNEL
 
-rclmx:         LD   C,(IX+9)
-               LD   B,(IX+10)
-               PUSH BC
-               PUSH IX
-               POP  HL
-               CALL cmr
-               DEFW &19E8
-               POP  BC
-               RET
+rclmx:         ld c,(ix+9)
+               ld b,(ix+10)
+               push bc
+               push ix
+               pop hl
+               call cmr
+               defw &19e8
+               pop bc
+               ret
 
 ;EVALUATE A MOVE SYNTAX
 
-evmov:         CALL gtnc
-               CP   "#"
-               JP   Z,evsrm
+evmov:         call gtnc
+               cp "#"
+               jp z,evsrm
 
-evsyn:         LD   (lstr1),A
-               AND  &DF
-               CP   "D"
-               CALL NZ,evspx
-               CALL evnum
-               CALL separ
-               JP   Z,evnam
-               CALL cfso
-               RET  Z
-               PUSH AF
-               LD   A,(lstr1)
-               AND  &DF
-               CP   "D"
-               JP   Z,rep2
-               CP   "M"
-               JP   Z,rep2
-               POP  AF
-               RET
+evsyn:         ld (lstr1),a
+               and &df
+               cp "D"
+               call nz,evspx
+               call evnum
+               call separ
+               jp z,evnam
+               call cfso
+               ret z
+               push af
+               ld a,(lstr1)
+               and &df
+               cp "D"
+               jp z,rep2
+               cp "M"
+               jp z,rep2
+               pop af
+               ret
 
 
 ;OPEN A MOVE CHANNEL
 
-opmov:         LD   A,(sstr1)
-               INC  A
-               JR   Z,opmv1
-               DEC  A
-               CALL cmr
-               DEFW &1601
-               LD   HL,(curchl)
-               LD   (nstr1),HL
-               RET
+opmov:         ld a,(sstr1)
+               inc a
+               jr z,opmv1
+               dec a
+               call cmr
+               defw &1601
+               ld hl,(curchl)
+               ld (nstr1),hl
+               ret
 
-opmv1:         LD   A,(lstr1)
-               AND  &DF
-               CP   "M"
-               JR   Z,opmv2
-               CP   "D"
-               JR   NZ,opmv3
-opmv2:         CALL ckdrv
-               CALL opend
-               LD   A,(nstr1)
-               LD   (fstr1),A
-               LD   (nstr1),IX
-               RET
+opmv1:         ld a,(lstr1)
+               and &df
+               cp "M"
+               jr z,opmv2
+               cp "D"
+               jr nz,opmv3
+opmv2:         call ckdrv
+               call opend
+               ld a,(nstr1)
+               ld (fstr1),a
+               ld (nstr1),ix
+               ret
 
-opmv3:         CP   "N"
-               JP   NZ,rep0
-               CALL setf3
-               RET
+opmv3:         cp "N"
+               jp nz,rep0
+               call setf3
+               ret
 
 
 ;CLOSE A MOVE CHANNEL
 
-clmov:         LD   A,(sstr1)
-               INC  A
-               RET  NZ
+clmov:         ld a,(sstr1)
+               inc a
+               ret nz
 
-               LD   A,(lstr1)
-               AND  &DF
-               CP   "N"
-               JR   Z,clmv1
-               LD   IX,(nstr1)
-               JP   deld
+               ld a,(lstr1)
+               and &df
+               cp "N"
+               jr z,clmv1
+               ld ix,(nstr1)
+               jp deld
 
-clmv1:         RET
+clmv1:         ret
 
 
 ;RECLAIM TEMPORARY CHANNELS
 
-cltemp:        LD   IX,(chans)
-               LD   DE,&0014
-               ADD  IX,DE
-cltm1:         LD   A,(IX)
-               CP   &80
-               RET  Z
+cltemp:        ld ix,(chans)
+               ld de,&0014
+               add ix,de
+cltm1:         ld a,(ix)
+               cp &80
+               ret z
 
-               LD   A,(IX+4)
-               CP   "D"+&80
-               JR   NZ,cltm2
-               CALL deld
-               JR   cltemp
+               ld a,(ix+4)
+               cp "D"+&80
+               jr nz,cltm2
+               call deld
+               jr cltemp
 
-cltm2:         CALL bitf1
-               JR   Z,cltm3
-               CALL rclmx
-               JR   cltemp
+cltm2:         call bitf1
+               jr z,cltm3
+               call rclmx
+               jr cltemp
 
-cltm3:         LD   E,(IX+9)
-               LD   D,(IX+10)
-               ADD  IX,DE
-               JR   cltm1
+cltm3:         ld e,(ix+9)
+               ld d,(ix+10)
+               add ix,de
+               jr cltm1
 
 
-deld:          PUSH IX
-               POP  HL
-               LD   DE,(chans)
-               OR   A
-               SBC  HL,DE
-               INC  HL
-               LD   (svtrs),HL
-               JP   clrchd
+deld:          push ix
+               pop hl
+               ld de,(chans)
+               or a
+               sbc hl,de
+               inc hl
+               ld (svtrs),hl
+               jp clrchd
 
 
 ;OPEN# COMMAND SYNTAX ROUTINE
 
-open:          CALL evsrm
-               CALL separ
-               JP   NZ,rep0
-               CALL evsyn
-               CP   &D
-               JR   Z,open2
-               CP   min
-               JR   Z,open1
-               CP   mto
-               JP   NZ,rep2
-open1:         LD   (fstr1),A
-               CALL gtnc
+open:          call evsrm
+               call separ
+               jp nz,rep0
+               call evsyn
+               cp &0d
+               jr z,open2
+               cp min
+               jr z,open1
+               cp mto
+               jp nz,rep2
+open1:         ld (fstr1),a
+               call gtnc
 
-open2:         CALL ceos
-               LD   A,(sstr1)
-               CALL cmr
-               DEFW &1727
-               LD   HL,&0011
-               AND  A
-               SBC  HL,BC
-               JP   C,rep30
-               LD   A,(lstr1)
-               AND  &DF
-               CP   "D"
-               JR   Z,open3
-               CP   "M"
-               JP   NZ,rep0
-open3:         CALL ckdrv
-               LD   A,10
-               LD   (nstr1),A
-               CALL opdst
-               JP   ends
+open2:         call ceos
+               ld a,(sstr1)
+               call cmr
+               defw &1727
+               ld hl,&0011
+               and a
+               sbc hl,bc
+               jp c,rep30
+               ld a,(lstr1)
+               and &df
+               cp "D"
+               jr z,open3
+               cp "M"
+               jp nz,rep0
+open3:         call ckdrv
+               ld a,10
+               ld (nstr1),a
+               call opdst
+               jp ends
 
 
 ;OPEN A STREAM TO 'D' CHANNEL
 
-opdst:         LD   A,(sstr1)
-               ADD  A,A
-               LD   HL,&5C16
-               LD   E,A
-               LD   D,0
-               ADD  HL,DE
-               PUSH HL
-               CALL opend
-               POP  DE
-               RET  C
+opdst:         ld a,(sstr1)
+               add a,a
+               ld hl,&5c16
+               ld e,a
+               ld d,0
+               add hl,de
+               push hl
+               call opend
+               pop de
+               ret c
 
-               BIT  0,(IX+mflg)
-               JR   Z,opdst1
+               bit 0,(ix+mflg)
+               jr z,opdst1
 ;      IN   A,(COMM)
 ;      BIT  6,A
-               JR   Z,opdst1
-               CALL rclmx
-               JP   rep23
+               jr z,opdst1
+               call rclmx
+               jp rep23
 
-opdst1:        RES  7,(IX+4)
-               EX   DE,HL
-               LD   (HL),E
-               INC  HL
-               LD   (HL),D
-               RET
+opdst1:        res 7,(ix+4)
+               ex de,hl
+               ld (hl),e
+               inc hl
+               ld (hl),d
+               ret
 
 
 ;OPEN A  'D' DISC CHANNEL
 
-opend:         LD   IX,(chans)
-               LD   DE,&14
-               ADD  IX,DE
-opnd1:         LD   A,(IX)
-               CP   &80
-               JR   Z,opnd4
+opend:         ld ix,(chans)
+               ld de,&14
+               add ix,de
+opnd1:         ld a,(ix)
+               cp &80
+               jr z,opnd4
 
 ;FOUND AN OPEN CHANNEL
 
-               LD   A,(IX+4)
-               AND  &5F
-               CP   "D"
-               JR   NZ,opnd3
-               LD   A,(dstr1)
-               CP   (IX+mdrv)
-               JR   NZ,opnd3
+               ld a,(ix+4)
+               and &5f
+               cp "D"
+               jr nz,opnd3
+               ld a,(dstr1)
+               cp (ix+mdrv)
+               jr nz,opnd3
 
 ;CHECK NAME OF CHANNEL
 
-               PUSH IX
-               POP  HL
-               LD   DE,name
-               ADD  HL,DE
-               EX   DE,HL
-               LD   HL,nstr1+1
-               LD   B,10
-opnd2:         LD   A,(DE)
-               XOR  (HL)
-               AND  &DF
-               JR   NZ,opnd3
-               INC  HL
-               INC  DE
-               DJNZ opnd2
+               push ix
+               pop hl
+               ld de,name
+               add hl,de
+               ex de,hl
+               ld hl,nstr1+1
+               ld b,10
+opnd2:         ld a,(de)
+               xor (hl)
+               and &df
+               jr nz,opnd3
+               inc hl
+               inc de
+               djnz opnd2
 
-               JP   rep31
+               jp rep31
 
 ;GET THE LENGTH OF CHANNEL
 
-opnd3:         LD   E,(IX+9)
-               LD   D,(IX+10)
-               ADD  IX,DE
-               JR   opnd1
+opnd3:         ld e,(ix+9)
+               ld d,(ix+10)
+               add ix,de
+               jr opnd1
 
 ;TEST DIRECTORY FOR FILENAME
 
-opnd4:         PUSH IX
-               LD   A,&10
-               CALL fdhr
-               LD   A,(fstr1)
-               JP   NZ,opnd5
+opnd4:         push ix
+               ld a,&10
+               call fdhr
+               ld a,(fstr1)
+               jp nz,opnd5
 
 ;FILE FOUND
 
-               CP   mto
-               JP   Z,opnd6
+               cp mto
+               jp z,opnd6
 
 ;OPEN A READ CHANNEL
 
-               LD   BC,551
-               CALL crmch
+               ld bc,551
+               call crmch
 
 ;SET HL TO FILE IN DRAM
 
-               CALL point
+               call point
 
 ;RESTORE CHANNEL ADDRESS
 
-               POP  IX
-               LD   A,(dstr1)
-               LD   (IX+mdrv),A
+               pop ix
+               ld a,(dstr1)
+               ld (ix+mdrv),a
 
-               LD   A,0
-               LD   (IX+mflg),A
+               ld a,0
+               ld (ix+mflg),a
 
-               LD   BC,rram
-               LD   (IX+bufl),C
-               LD   (IX+bufh),B
+               ld bc,rram
+               ld (ix+bufl),c
+               ld (ix+bufh),b
 
 ;TRANSFER NAME OF FILE
 
-               PUSH HL
+               push hl
 
-               PUSH IX
-               POP  HL
-               LD   DE,ffsa
-               ADD  HL,DE
-               EX   DE,HL
-               POP  HL
-               LD   BC,11
-               LD   A,(HL)
-               LD   (nstr1),A
-               LDIR
+               push ix
+               pop hl
+               ld de,ffsa
+               add hl,de
+               ex de,hl
+               pop hl
+               ld bc,11
+               ld a,(hl)
+               ld (nstr1),a
+               ldir
 
-               INC  HL
-               INC  HL
-               LD   B,(HL)
-               INC  HL
-               LD   C,(HL)
-               PUSH BC
+               inc hl
+               inc hl
+               ld b,(hl)
+               inc hl
+               ld c,(hl)
+               push bc
 
-               LD   BC,196
-               ADD  HL,BC
-               LD   A,(HL)
-               LD   (IX+18),A
-               INC  HL
+               ld bc,196
+               add hl,bc
+               ld a,(hl)
+               ld (ix+18),a
+               inc hl
 
-               LD   BC,9
-               LDIR
+               ld bc,9
+               ldir
 
-               LD   DE,str-20
-               LD   BC,22
-               LDIR
+               ld de,str-20
+               ld bc,22
+               ldir
 
-               POP  DE
-               CALL rsad
-               JR   opnd7
+               pop de
+               call rsad
+               jr opnd7
 
 
 ;FILE NOT FOUND IS IT A READ?
 
-opnd5:         CP   min
-               JP   Z,rep26
+opnd5:         cp min
+               jp z,rep26
 
 ;OPEN A WRITE FILE
 
-opnd6:         LD   BC,787
-               CALL crmch
+opnd6:         ld bc,787
+               call crmch
 
-               POP  IX
-               LD   A,(dstr1)
-               LD   (IX+mdrv),A
+               pop ix
+               ld a,(dstr1)
+               ld (ix+mdrv),a
 
-               LD   A,1
-               LD   (IX+mflg),A
+               ld a,1
+               ld (ix+mflg),a
 
-               LD   BC,wram
-               LD   (IX+bufl),C
-               LD   (IX+bufh),B
+               ld bc,wram
+               ld (ix+bufl),c
+               ld (ix+bufh),b
 
-               CALL ofsm
-               JR   Z,opnd6a
+               call ofsm
+               jr z,opnd6a
 
-               LD   BC,787
-               PUSH IX
-               POP  HL
-               CALL cmr
-               DEFW &19E8
-               SCF
-               RET
+               ld bc,787
+               push ix
+               pop hl
+               call cmr
+               defw &19e8
+               scf
+               ret
 
-opnd6a:        CALL bitf2
-               JR   Z,opnd7
+opnd6a:        call bitf2
+               jr z,opnd7
 
-               PUSH IX
-               POP  HL
-               LD   DE,230
-               ADD  HL,DE
-               EX   DE,HL
-               LD   HL,(nstr2)
-               LD   BC,rtyp
-               ADD  HL,BC
-               LD   BC,9
-               LDIR
+               push ix
+               pop hl
+               ld de,230
+               add hl,de
+               ex de,hl
+               ld hl,(nstr2)
+               ld bc,rtyp
+               add hl,bc
+               ld bc,9
+               ldir
 
-               LD   HL,str-20
-               LD   BC,22
-               LDIR
+               ld hl,str-20
+               ld bc,22
+               ldir
 
 ;ENTER CHANNEL DATA
 
-opnd7:         PUSH IX
-               POP  DE
-               LD   HL,mtbls
-               LD   BC,11
-               LDIR
+opnd7:         push ix
+               pop de
+               ld hl,mtbls
+               ld bc,11
+               ldir
 
 
 ;CALCULATE STREAM OFFSET
 
-               PUSH IX
-               POP  HL
-               LD   DE,(chans)
-               OR   A
-               SBC  HL,DE
-               INC  HL
-               RET
+               push ix
+               pop hl
+               ld de,(chans)
+               or a
+               sbc hl,de
+               inc hl
+               ret
 
 
 ;CREATE THE 'D' CHANNEL
 
-crmch:         LD   (mlen),BC
-               LD   HL,(prog)
-               DEC  HL
-               PUSH HL
-               PUSH BC
-               CALL cmr
-               DEFW &1655
-               POP  BC
-               POP  HL
+crmch:         ld (mlen),bc
+               ld hl,(prog)
+               dec hl
+               push hl
+               push bc
+               call cmr
+               defw &1655
+               pop bc
+               pop hl
 
 ;CLEAR THE NEW CHANNEL AREA
 
-crmc1:         LD   (HL),0
-               INC  HL
-               DEC  BC
-               LD   A,B
-               OR   C
-               JR   NZ,crmc1
-               RET
+crmc1:         ld (hl),0
+               inc hl
+               dec bc
+               ld a,b
+               or c
+               jr nz,crmc1
+               ret
 
 
 ;DISC 'D' CHANNEL DATA
 
-mtbls:         DEFW &0008
-               DEFW &0008
-               DEFB "D"+&80
-               DEFW mchwr
-               DEFW mchrd
-mlen:          DEFW 0
+mtbls:         defw &0008
+               defw &0008
+               defb "D"+&80
+               defw mchwr
+               defw mchrd
+mlen:          defw 0
 
 
 ;CLOSE# STREAMS COMMAND
 
-close:         CALL gtnc
-               CP   "*"
-               JP   NZ,rep0
-               CALL gtnc
-               CP   &D
-               JR   Z,clos1
-               CP   &3A
-               JR   Z,clos1
-               CALL evsrmx
-               CALL ceos
-               LD   A,(sstr1)
-               CALL clsrm
-               JP   ends
+close:         call gtnc
+               cp "*"
+               jp nz,rep0
+               call gtnc
+               cp &0d
+               jr z,clos1
+               cp &3a
+               jr z,clos1
+               call evsrmx
+               call ceos
+               ld a,(sstr1)
+               call clsrm
+               jp ends
 
-clos1:         CALL ceos
-               JR   clrs1
+clos1:         call ceos
+               jr clrs1
 
 
 ;CLEAR# STREAMS COMMAND
 
-clear:         CALL gtnc
-               CP   "#"
-               JP   NZ,rep0
-               CALL gtnc
-               CALL ceos
-               CALL setf1
+clear:         call gtnc
+               cp "#"
+               jp nz,rep0
+               call gtnc
+               call ceos
+               call setf1
 
-clrs1:         XOR  A
-clrs2:         PUSH AF
-               CALL clsrm
-               POP  AF
-               INC  A
-               CP   16
-               JR   C,clrs2
+clrs1:         xor a
+clrs2:         push af
+               call clsrm
+               pop af
+               inc a
+               cp 16
+               jr c,clrs2
 
-               CALL cltemp
-               XOR  A
-               LD   (samcnt),A
-               LD   (flag3),A
-               JP   ends
+               call cltemp
+               xor a
+               ld (samcnt),a
+               ld (flag3),a
+               jp ends
 
 
 ;CLEAR STREAM AND CLOSE CHANNEL
 
-clsrm:         CALL cmr
-               DEFW &1727
-               LD   A,C
-               OR   B
-               RET  Z
+clsrm:         call cmr
+               defw &1727
+               ld a,c
+               or b
+               ret z
 
 ;CLOSE THE STREAM
 
-               LD   (svtrs),BC
-               PUSH HL
-               LD   HL,(chans)
-               DEC  HL
-               ADD  HL,BC
-               EX   (SP),HL
-               CALL cmr
-               DEFW &16EB
-               POP  IX
-               LD   A,B
-               OR   C
-               RET  NZ
+               ld (svtrs),bc
+               push hl
+               ld hl,(chans)
+               dec hl
+               add hl,bc
+               ex (sp),hl
+               call cmr
+               defw &16eb
+               pop ix
+               ld a,b
+               or c
+               ret nz
 
 ;TEST FOR DISC 'D' CHANNEL
 
-               LD   A,(IX+4)
-               AND  &5F
-               CP   "D"
-               JR   NZ,rclaim
-clrchd:        BIT  0,(IX+mflg)
-               JR   Z,rclaim
-               CALL bitf1
-               JR   NZ,rclaim
+               ld a,(ix+4)
+               and &5f
+               cp "D"
+               jr nz,rclaim
+clrchd:        bit 0,(ix+mflg)
+               jr z,rclaim
+               call bitf1
+               jr nz,rclaim
 
 ;AN OPEN WRITE CHANNEL
 
-               CALL cfsm
+               call cfsm
 
 ;RECLAIM THE CHANNEL
 
-rclaim:        CALL rclmx
+rclaim:        call rclmx
 
 ;CLOSE AND UPDATE STREAM DISP
 
-               XOR  A
-               LD   HL,&5C16
-rclm1:         LD   (svhl),HL
-               LD   E,(HL)
-               INC  HL
-               LD   D,(HL)
-               LD   HL,(svtrs)
-               AND  A
-               SBC  HL,DE
-               JR   NC,rclm4
-               EX   DE,HL
-               AND  A
-               SBC  HL,BC
-               EX   DE,HL
-               LD   HL,(svhl)
-               LD   (HL),E
-               INC  HL
-               LD   (HL),D
-rclm4:         LD   HL,(svhl)
-               INC  HL
-               INC  HL
-               INC  A
-               CP   16
-               JR   C,rclm1
-               RET
+               xor a
+               ld hl,&5c16
+rclm1:         ld (svhl),hl
+               ld e,(hl)
+               inc hl
+               ld d,(hl)
+               ld hl,(svtrs)
+               and a
+               sbc hl,de
+               jr nc,rclm4
+               ex de,hl
+               and a
+               sbc hl,bc
+               ex de,hl
+               ld hl,(svhl)
+               ld (hl),e
+               inc hl
+               ld (hl),d
+rclm4:         ld hl,(svhl)
+               inc hl
+               inc hl
+               inc a
+               cp 16
+               jr c,rclm1
+               ret
 
 
 ;CLS ROUTINE
 
-cls:           CALL gtnc
-               CP   "#"
-               JP   NZ,rep0
-               CALL gtnc
-               CALL ceos
+cls:           call gtnc
+               cp "#"
+               jp nz,rep0
+               call gtnc
+               call ceos
 
-               LD   HL,&0038
-               LD   (attrp),HL
-               LD   (attrt),HL
-               LD   (IY+14),L
-               LD   (IY+87),H
-               LD   A,7
-               OUT  (ula),A
-               CALL cmr
-               DEFW &D6B
-               JP   ends
+               ld hl,&0038
+               ld (attrp),hl
+               ld (attrt),hl
+               ld (iy+14),l
+               ld (iy+87),h
+               ld a,7
+               out (ula),a
+               call cmr
+               defw &0d6b
+               jp ends
 
 
 ;DISC 'D' CHANNEL INPUT
 
-mchrd:         LD   IX,(curchl)
-               LD   HL,mchin
+mchrd:         ld ix,(curchl)
+               ld hl,mchin
 
 
 ;MAIN INPUT ROUTINE
 
-cinput:        RES  3,(IY+2)
-               PUSH HL
-               LD   HL,(errsp)
-               LD   E,(HL)
-               INC  HL
-               LD   D,(HL)
-               AND  A
-               LD   HL,&107F
-               SBC  HL,DE
-               JR   NZ,inkey
+cinput:        res 3,(iy+2)
+               push hl
+               ld hl,(errsp)
+               ld e,(hl)
+               inc hl
+               ld d,(hl)
+               and a
+               ld hl,&107f
+               sbc hl,de
+               jr nz,inkey
 
 ;INPUT# COMMAND
 
-               POP  HL
-               LD   SP,(errsp)
-               POP  DE
-               POP  DE
-               LD   (errsp),DE
-inp1:          PUSH HL
-               LD   DE,inp2
-               PUSH DE
-               JP   (HL)
+               pop hl
+               ld sp,(errsp)
+               pop de
+               pop de
+               ld (errsp),de
+inp1:          push hl
+               ld de,inp2
+               push de
+               jp (hl)
 
-inp2:          JR   C,inp3
-               JP   NZ,rep27
-               POP  HL
-               JR   inp1
+inp2:          jr c,inp3
+               jp nz,rep27
+               pop hl
+               jr inp1
 
-inp3:          CP   &D
-               JR   Z,inp4
-               CALL cmr
-               DEFW &F85
-               POP  HL
-               JR   inp1
+inp3:          cp &0d
+               jr z,inp4
+               call cmr
+               defw &0f85
+               pop hl
+               jr inp1
 
-inp4:          POP  HL
+inp4:          pop hl
 ;      JP   RTMP
 
 ;INKEY$ INPUT FUNCTION
 
-inkey:         POP  HL
-               LD   DE,ink1
-               PUSH DE
-               JP   (HL)
+inkey:         pop hl
+               ld de,ink1
+               push de
+               jp (hl)
 
-ink1:          RET  C
-               RET  Z
-               CALL bitf2
-               JP   Z,rep27
-               OR   1
-               RET
+ink1:          ret c
+               ret z
+               call bitf2
+               jp z,rep27
+               or 1
+               ret
 
 
 ;DISC 'D' CHANNEL READ
 
-mchin:         BIT  0,(IX+mflg)
-               JP   NZ,rep18
+mchin:         bit 0,(ix+mflg)
+               jp nz,rep18
 
 ;DECREMENT THE FILE COUNT
 
-               LD   A,(IX+31)
-               SUB  1
-               LD   (IX+31),A
-               JR   NC,mchn1
+               ld a,(ix+31)
+               sub 1
+               ld (ix+31),a
+               jr nc,mchn1
 
-               LD   A,(IX+32)
-               SUB  1
-               LD   (IX+32),A
-               JR   NC,mchn1
+               ld a,(ix+32)
+               sub 1
+               ld (ix+32),a
+               jr nc,mchn1
 
-               LD   A,(IX+18)
-               SUB  1
-               LD   (IX+18),A
-               JR   NC,mchn1
+               ld a,(ix+18)
+               sub 1
+               ld (ix+18),a
+               jr nc,mchn1
 
-               XOR  A
-               ADD  &D
-               RET
+               xor a
+               add &0d
+               ret
 
-mchn1:         CALL lbyt
-               CALL bcr
-               SCF
-               RET
+mchn1:         call lbyt
+               call bcr
+               scf
+               ret
 
 
 
 ;DISC 'D' CHANNEL OUTPUT
 
-mchwr:         LD   IX,(curchl)
-               BIT  0,(IX+mflg)
-               JP   Z,rep19
+mchwr:         ld ix,(curchl)
+               bit 0,(ix+mflg)
+               jp z,rep19
 
-               CALL sbyt
-               CALL bcr
+               call sbyt
+               call bcr
 
 ;UPDATE BLOCK SIZE COUNT
 
-               CALL bitf2
-               RET  NZ
+               call bitf2
+               ret nz
 
-               PUSH IX
-               LD   BC,229
-               ADD  IX,BC
-               INC  (IX+2)
-               JR   NZ,mchwr1
-               INC  (IX+3)
-               JR   NZ,mchwr1
-               INC  (IX)
+               push ix
+               ld bc,229
+               add ix,bc
+               inc (ix+2)
+               jr nz,mchwr1
+               inc (ix+3)
+               jr nz,mchwr1
+               inc (ix)
 
-mchwr1:        POP  IX
-               RET
+mchwr1:        pop ix
+               ret
 

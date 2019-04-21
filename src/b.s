@@ -1,495 +1,495 @@
-               ORG  gnd
-               DUMP gnd.bank,&0000
+               org gnd
+               dump gnd.bank,&0000
 
-comm:          EQU  224
-trck:          EQU  225
-sect:          EQU  226
-dtrq:          EQU  227
+comm:          equ 224
+trck:          equ 225
+sect:          equ 226
+dtrq:          equ 227
 
-  	           DEFB 3	
-       	       DEFW 0
-               DEFW 0
-               DEFW 0
-               DEFW 0
+               defb 3
+               defw 0
+               defw 0
+               defw 0
+               defw 0
 
-               LD   HL,&8000+510
-               LD   DE,&0402
+               ld hl,&8000+510
+               ld de,&0402
 
-dos:           XOR  A
-               LD   (dct),A
-               LD   (svhl),HL
+dos:           xor a
+               ld (dct),a
+               ld (svhl),hl
 
-               LD   A,E
-               OUT  (sect),A
+               ld a,e
+               out (sect),a
 
-dos2:          IN   A,(comm)
-               BIT  0,A
-               JR   NZ,dos2
+dos2:          in a,(comm)
+               bit 0,a
+               jr nz,dos2
 
-               IN   A,(trck)
-               CP   D
-               JR   Z,dos4
+               in a,(trck)
+               cp d
+               jr z,dos4
 
-               LD   A,stpout
-               JR   NC,dos3
-               LD   A,stpin
+               ld a,stpout
+               jr nc,dos3
+               ld a,stpin
 
-dos3:          OUT  (comm),A
-               LD   B,20
-del1:          DJNZ del1
-               JR   dos2
+dos3:          out (comm),a
+               ld b,20
+del1:          djnz del1
+               jr dos2
 
-dos4:          DI
-               LD   A,drsec
-               OUT  (comm),A
-               LD   B,20
-del2:          DJNZ del2
+dos4:          di
+               ld a,drsec
+               out (comm),a
+               ld b,20
+del2:          djnz del2
 
-               LD   HL,(svhl)
-               LD   BC,dtrq
-               JR   dos6
+               ld hl,(svhl)
+               ld bc,dtrq
+               jr dos6
 
-dos5:          INI
+dos5:          ini
 
-dos6:          IN   A,(comm)
-               BIT  1,A
-               JR   NZ,dos5
-               BIT  0,A
-               JR   NZ,dos6
+dos6:          in a,(comm)
+               bit 1,a
+               jr nz,dos5
+               bit 0,a
+               jr nz,dos6
 
-               EI
+               ei
 
 ;CHECK DISC ERR COUNT
 
-               AND  &1C
-               JR   Z,dos8
+               and &1c
+               jr z,dos8
 
-               LD   A,(dct)
-               INC  A
-               LD   (dct),A
-               PUSH AF
-               AND  2
-               JR   Z,dos7
+               ld a,(dct)
+               inc a
+               ld (dct),a
+               push af
+               and 2
+               jr z,dos7
 
-               LD   A,dres
-               OUT  (comm),A
-               LD   B,20
-del3:          DJNZ del3
+               ld a,dres
+               out (comm),a
+               ld b,20
+del3:          djnz del3
 
-dos7:          POP  AF
-               CP   10
-               JR   C,dos2
+dos7:          pop af
+               cp 10
+               jr c,dos2
 
-               RST  8
-               DEFB 19
+               rst 8
+               defb 19
 
-dos8:          DEC  HL
-               LD   E,(HL)
-               DEC  HL
-               LD   D,(HL)
-               LD   A,D
-               OR   E
-               JR   NZ,dos
+dos8:          dec hl
+               ld e,(hl)
+               dec hl
+               ld d,(hl)
+               ld a,d
+               or e
+               jr nz,dos
 
-               LD   A,(&5CB4)   ;page
-               LD   (port2+&4000),A
-               DEC  A
-               LD   (snprt2+&4000),A
-               DEC  A
-               LD   (&5BC2),A   ;dosflg
+               ld a,(&5cb4)   ;page
+               ld (port2+&4000),a
+               dec a
+               ld (snprt2+&4000),a
+               dec a
+               ld (&5bc2),a   ;dosflg
 
-               LD   H,&51
-               LD   L,A         ;dsc use
-               LD   (HL),&60
+               ld h,&51
+               ld l,a         ;dsc use
+               ld (hl),&60
 
-               LD   HL,&0144    ;device
-               LD   (&5A06),HL
+               ld hl,&0144    ;device
+               ld (&5a06),hl
 
-               RET
+               ret
 
-dvar:          EQU  $
+dvar:          equ $
 
-rbcc:          DEFB 7
-traks1:        DEFB 128+80
-traks2:        DEFB 128+80
-stprat:        DEFB 0
-stprt2:        DEFB 0
-chdir:         DEFB &20
-nstat:         DEFB 1
-vers:          DEFB 01
+rbcc:          defb 7
+traks1:        defb 128+80
+traks2:        defb 128+80
+stprat:        defb 0
+stprt2:        defb 0
+chdir:         defb &20
+nstat:         defb 1
+vers:          defb 01
 
-size1:         DEFB 2
-size2:         DEFB 3
-szea:          DEFB 0
-lfeed:         DEFB 1
-lmarg:         DEFB 0
-graph:         DEFB 1
-               DEFB 0
-               DEFB 0
-               DEFB 0
-               DEFB 0
-               DEFB 0
-               DEFB 0
-               DEFB 0
-               DEFB 0
+size1:         defb 2
+size2:         defb 3
+szea:          defb 0
+lfeed:         defb 1
+lmarg:         defb 0
+graph:         defb 1
+               defb 0
+               defb 0
+               defb 0
+               defb 0
+               defb 0
+               defb 0
+               defb 0
+               defb 0
 
-extadd:        CALL cmr
-onerr:         DEFW 0
-               RET
+extadd:        call cmr
+onerr:         defw 0
+               ret
 
-hksp:          DEFW 0
-               DEFW 0
+hksp:          defw 0
+               defw 0
 
 
 ;PRINTER INITIALISE
 
-pcc1:          DEFB &D,&80,&80,&80
+pcc1:          defb &0d,&80,&80,&80
 
 ;CHARACTER PITCH
 
-pcc2:          DEFB &1B,&4D,&80,&80
+pcc2:          defb &1b,&4d,&80,&80
 
 ;LINE SPACING CODES
 
-pcc3:          DEFB &1B,&41,&80,&80
+pcc3:          defb &1b,&41,&80,&80
 
 ;PIN GRAPHICS CODES
 
-pcc4:          DEFB &1B,&2A,&05,&80
+pcc4:          defb &1b,&2a,&05,&80
 
 ;ANY OTHER INITIALISE
 
-pcc5:          DEFB &80,&80,&80,&80
+pcc5:          defb &80,&80,&80,&80
 
 ;SPECIAL GRAPHIC CODES
 
-pound:         DEFB &18,&20,&20,&78
-               DEFB &20,&20,&7C,&00
+pound:         defb &18,&20,&20,&78
+               defb &20,&20,&7c,&00
 
-hash:          DEFB &00,&24,&7E,&24
-               DEFB &24,&7E,&24,&00
+hash:          defb &00,&24,&7e,&24
+               defb &24,&7e,&24,&00
 
-crite:         DEFB &7E,&81,&BD,&A1
-               DEFB &A1,&BD,&81,&7E
+crite:         defb &7e,&81,&bd,&a1
+               defb &a1,&bd,&81,&7e
 
-gcc1:          DEFB &1B,&2A,&05,&40
-               DEFB &02,&80,&80,&80
-
-
-               ORG  gnd+&0100
-               DUMP gnd.bank,&0100
-
-               DEFM "BOO"
-               DEFB "T"+&80
-
-entsp:         DEFW 0
-snprt0:        DEFB &1F
-snprt1:        DEFB 2
-snprt2:        DEFB 0
-snpsva:        DEFB 0
-
-svhdr:         DEFW 0
-cchad:         DEFW 0
-cnt:           DEFW 0
-
-dsc:           DEFB 0
-dct:           DEFB 0
-dst:           DEFB 0
-               DEFS 7
-nbot:          DEFB 0
-rcmr:          DEFB 0
-count:         DEFB 0
-sva:           DEFB 0
-svc:           DEFB 0
-samcnt:        DEFB 0
-rmse:          DEFB 0
-smse:          DEFB 0
-
-svdpt:         DEFW 0
-svtrs:         DEFW 0
-svbuf:         DEFW 0
-svcnt:         DEFW 0
-hldi:          DEFW 0
-ptrscr:        DEFW 0
-
-port1:         DEFB 0
-port2:         DEFB 0
-port3:         DEFB 0
-
-tstr1:         DEFB 0
-ostr1:         DEFB 0
-cstr1:         DEFB 0
-hstr1:         DEFB 0
-
-dstr1:         DEFB 0
-fstr1:         DEFB 0
-sstr1:         DEFB 0
-lstr1:         DEFB 0
-nstr1:         DEFB 0
-               DEFS 14
-hd001:         DEFB 0
-hd0b1:         DEFW 0
-hd0d1:         DEFW 0
-hd0f1:         DEFW 0
-pges1:         DEFB 0
-page1:         DEFB 0
-
-dstr2:         DEFB 0
-fstr2:         DEFB 0
-sstr2:         DEFB 0
-lstr2:         DEFB 0
-nstr2:         DEFB 0
-               DEFS 14
-hd002:         DEFB 0
-hd0b2:         DEFW 0
-hd0d2:         DEFW 0
-hd0f2:         DEFW 0
-pges2:         DEFB 0
-page2:         DEFB 0
-
-nstr3:         DEFB 0
-               DEFS 14
-
-uifa:          DEFB 0
-               DEFS 47
-
-difa:          DEFB 0
-               DEFS 47
-
-hka:           DEFB 0
-hkhl:          DEFW 0
-hkde:          DEFW 0
-hkbc:          DEFW 0
-
-xpt:           DEFW 0
-xtch:          DEFW 0
-
-snme:          DEFB &13
-               DEFM "SNAP          "
-               DEFB &13
-snlen:         DEFW 49152
-snadd:         DEFW 16384
-               DEFW 0
-               DEFW &FFFF
+gcc1:          defb &1b,&2a,&05,&40
+               defb &02,&80,&80,&80
 
 
-size:          EQU  zzend-gnd+&0220
+               org gnd+&0100
+               dump gnd.bank,&0100
+
+               defm "BOO"
+               defb "T"+&80
+
+entsp:         defw 0
+snprt0:        defb &1f
+snprt1:        defb 2
+snprt2:        defb 0
+snpsva:        defb 0
+
+svhdr:         defw 0
+cchad:         defw 0
+cnt:           defw 0
+
+dsc:           defb 0
+dct:           defb 0
+dst:           defb 0
+               defs 7
+nbot:          defb 0
+rcmr:          defb 0
+count:         defb 0
+sva:           defb 0
+svc:           defb 0
+samcnt:        defb 0
+rmse:          defb 0
+smse:          defb 0
+
+svdpt:         defw 0
+svtrs:         defw 0
+svbuf:         defw 0
+svcnt:         defw 0
+hldi:          defw 0
+ptrscr:        defw 0
+
+port1:         defb 0
+port2:         defb 0
+port3:         defb 0
+
+tstr1:         defb 0
+ostr1:         defb 0
+cstr1:         defb 0
+hstr1:         defb 0
+
+dstr1:         defb 0
+fstr1:         defb 0
+sstr1:         defb 0
+lstr1:         defb 0
+nstr1:         defb 0
+               defs 14
+hd001:         defb 0
+hd0b1:         defw 0
+hd0d1:         defw 0
+hd0f1:         defw 0
+pges1:         defb 0
+page1:         defb 0
+
+dstr2:         defb 0
+fstr2:         defb 0
+sstr2:         defb 0
+lstr2:         defb 0
+nstr2:         defb 0
+               defs 14
+hd002:         defb 0
+hd0b2:         defw 0
+hd0d2:         defw 0
+hd0f2:         defw 0
+pges2:         defb 0
+page2:         defb 0
+
+nstr3:         defb 0
+               defs 14
+
+uifa:          defb 0
+               defs 47
+
+difa:          defb 0
+               defs 47
+
+hka:           defb 0
+hkhl:          defw 0
+hkde:          defw 0
+hkbc:          defw 0
+
+xpt:           defw 0
+xtch:          defw 0
+
+snme:          defb &13
+               defm "SNAP          "
+               defb &13
+snlen:         defw 49152
+snadd:         defw 16384
+               defw 0
+               defw &ffff
+
+
+size:          equ zzend-gnd+&0220
 
 
 ;MAIN PROGRAM ENTRY POINT
 
-               ORG  gnd+&0200
-               DUMP gnd.bank,&0200
+               org gnd+&0200
+               dump gnd.bank,&0200
 
-               JP   hook
+               jp hook
 
-               JP   syntax
+               jp syntax
 
-               JP   &50D4
+               jp &50d4
 
-               ORG  gnd+&0210
-               DUMP gnd.bank,&0210
+               org gnd+&0210
+               dump gnd.bank,&0210
 
-               DEFW errtbl+&4000
+               defw errtbl+&4000
 
-               ORG  gnd+&0220
-               DUMP gnd.bank,&0220
+               org gnd+&0220
+               dump gnd.bank,&0220
 
 ;TEST FOR CODE ON ERROR
 
-syntax:        LD   (entsp),SP
+syntax:        ld (entsp),sp
 
-               CP   29        ;notund
-               JP   NZ,synt3
+               cp 29          ;notund
+               jp nz,synt3
 
-synt1:         LD   (cstr1),A
-               CALL setbit
-               CALL resreg
+synt1:         ld (cstr1),a
+               call setbit
+               call resreg
 
-               XOR  A
-               LD   (flag3),A
-               LD   IX,dchan
+               xor a
+               ld (flag3),a
+               ld ix,dchan
 
 ;GET CHADD AND SAVE IT
 
-               CALL nrrdd
-               DEFW chadd
-               LD   (cchad),BC
+               call nrrdd
+               defw chadd
+               ld (cchad),bc
 
 ;GET START OF STATEMENT
 
-               CALL nrrdd
-               DEFW cstat
+               call nrrdd
+               defw cstat
 
-               CALL nrwrd
-               DEFW chadd
+               call nrwrd
+               defw chadd
 
-               CALL gchr
+               call gchr
 
-               CP   &90       ;dir
-               JP   Z,dir
+               cp &90         ;dir
+               jp z,dir
 
-               CP   &91       ;format
-               JP   Z,wfod
+               cp &91         ;format
+               jp z,wfod
 
-               CP   &92       ;erase
-               JP   Z,eraz
+               cp &92         ;erase
+               jp z,eraz
 
-               CP   &93       ;move
-               JP   Z,move
+               cp &93         ;move
+               jp z,move
 
-               CP   &86       ;write
-               JP   Z,write
+               cp &86         ;write
+               jp z,write
 
-               CP   &95       ;load
-               JP   Z,load
+               cp &95         ;load
+               jp z,load
 
-               CP   &B8      ;read
-               JP   Z,read
+               cp &b8         ;read
+               jp z,read
 
-               CP   &98       ;open
-               JP   Z,open
+               cp &98         ;open
+               jp z,open
 
-               CP   &99       ;close
-               JP   Z,close
+               cp &99         ;close
+               jp z,close
 
-               CP   &CF      ;copy
-               JP   Z,copy
+               cp &cf         ;copy
+               jp z,copy
 
-               CP   &E3      ;rename
-               JP   Z,renam
+               cp &e3         ;rename
+               jp z,renam
 
-               CP   &E4      ;call
-               JP   Z,calll
+               cp &e4         ;call
+               jp z,calll
 
-               CP   &F1      ;protect
-               JP   Z,prot
+               cp &f1         ;protect
+               jp z,prot
 
-               CP   &F2      ;hide
-               JP   Z,hide
+               cp &f2         ;hide
+               jp z,hide
 
 
 ;CHECK EXTERNAL SYNTAX VECTOR
 
-               LD   BC,(cchad)
-               CALL nrwrd
-               DEFW chadd
+               ld bc,(cchad)
+               call nrwrd
+               defw chadd
 
-               LD   HL,(onerr)
-               LD   A,H
-               OR   L
-               LD   A,(cstr1)
-               CALL NZ,extadd
+               ld hl,(onerr)
+               ld a,h
+               or l
+               ld a,(cstr1)
+               call nz,extadd
 
-synt3:         LD   E,0
+synt3:         ld e,0
 
-               RET
+               ret
 
 
 ;SAMDOS HOOK CODE ROUTINE
 
-hook:          LD   (entsp),SP
-               LD   (svhdr),IX
-               EXX
-               EX   AF,AF'
-               LD   (hka),A
-               LD   (hkhl),HL
-               LD   (hkde),DE
-               LD   (hkbc),BC
-               EX   AF,AF'
-               EXX
-               CALL setbit
-               SCF
-               SBC  127
-               JP   C,rep17
+hook:          ld (entsp),sp
+               ld (svhdr),ix
+               exx
+               ex af,af'
+               ld (hka),a
+               ld (hkhl),hl
+               ld (hkde),de
+               ld (hkbc),bc
+               ex af,af'
+               exx
+               call setbit
+               scf
+               sbc 127
+               jp c,rep17
 
-               ADD  A,A
-               LD   L,A
-               LD   H,0
-               LD   DE,samhk
-               ADD  HL,DE
-               LD   E,(HL)
-               INC  HL
-               LD   D,(HL)
-               LD   HL,rfhk
-               PUSH HL
-               PUSH DE
-               XOR  A
-               LD   (flag3),A
-               LD   A,(hka)
-               RET
+               add a,a
+               ld l,a
+               ld h,0
+               ld de,samhk
+               add hl,de
+               ld e,(hl)
+               inc hl
+               ld d,(hl)
+               ld hl,rfhk
+               push hl
+               push de
+               xor a
+               ld (flag3),a
+               ld a,(hka)
+               ret
 
 
 ;RETURN FROM HOOK CODE O.K
 
-rfhk:          XOR  A
-               LD   E,A
-               CALL nrwr
-               DEFW var2+&01C3
-               JP   bcr
+rfhk:          xor a
+               ld e,a
+               call nrwr
+               defw var2+&01c3
+               jp bcr
 
 
 ;RESET ALL REGISTERS
 
-resreg:        LD   HL,tstr1
-               LD   BC,uifa-tstr1
-resr1:         LD   (HL),&FF
-               INC  HL
-               DEC  BC
-               LD   A,B
-               OR   C
-               JR   NZ,resr1
-               RET
+resreg:        ld hl,tstr1
+               ld bc,uifa-tstr1
+resr1:         ld (hl),&ff
+               inc hl
+               dec bc
+               ld a,b
+               or c
+               jr nz,resr1
+               ret
 
 
 ;COMMAND CODE TABLE
 
-samhk:         DEFW init      ;128
-               DEFW hgthd     ;129
-               DEFW hload     ;130
-               DEFW hvery     ;131
-               DEFW hsave     ;132
-               DEFW s         ;133
-               DEFW hopen     ;134
-               DEFW hclos     ;135
-               DEFW init      ;136
-               DEFW hdir      ;137
-               DEFW s         ;138
-               DEFW hvar      ;139
-               DEFW heof      ;140
-               DEFW hptr      ;141
-               DEFW hpath     ;142
-               DEFW s         ;143
-               DEFW s         ;144
-               DEFW s         ;145
-               DEFW s         ;146
-               DEFW hofle     ;147
-               DEFW sbyt      ;148
-               DEFW hwsad     ;149
-               DEFW hsvbk     ;150
-               DEFW s         ;151
-               DEFW cfsm      ;152
-               DEFW s         ;153
-               DEFW pntp      ;154
-               DEFW cops1     ;155
-               DEFW cops2     ;156
-               DEFW s         ;157
-               DEFW hgfle     ;158
-               DEFW lbyt      ;159
-               DEFW hrsad     ;160
-               DEFW hldbk     ;161
-               DEFW s         ;162
-               DEFW s         ;163
-               DEFW rest      ;164
-               DEFW pcat      ;165
-               DEFW heraz     ;166
-               DEFW s         ;167
-               DEFW s         ;168
+samhk:         defw init      ;128
+               defw hgthd     ;129
+               defw hload     ;130
+               defw hvery     ;131
+               defw hsave     ;132
+               defw s         ;133
+               defw hopen     ;134
+               defw hclos     ;135
+               defw init      ;136
+               defw hdir      ;137
+               defw s         ;138
+               defw hvar      ;139
+               defw heof      ;140
+               defw hptr      ;141
+               defw hpath     ;142
+               defw s         ;143
+               defw s         ;144
+               defw s         ;145
+               defw s         ;146
+               defw hofle     ;147
+               defw sbyt      ;148
+               defw hwsad     ;149
+               defw hsvbk     ;150
+               defw s         ;151
+               defw cfsm      ;152
+               defw s         ;153
+               defw pntp      ;154
+               defw cops1     ;155
+               defw cops2     ;156
+               defw s         ;157
+               defw hgfle     ;158
+               defw lbyt      ;159
+               defw hrsad     ;160
+               defw hldbk     ;161
+               defw s         ;162
+               defw s         ;163
+               defw rest      ;164
+               defw pcat      ;165
+               defw heraz     ;166
+               defw s         ;167
+               defw s         ;168
 
-setbit:        PUSH AF
-               LD   A,1
-               CALL nrwr
-               DEFW var2+&01C3
-               POP  AF
-               RET
+setbit:        push af
+               ld a,1
+               call nrwr
+               defw var2+&01c3
+               pop af
+               ret
 
