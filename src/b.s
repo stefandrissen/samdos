@@ -1,4 +1,7 @@
-               org gnd
+
+; boots at &8000, normally at &4000 
+
+               org gnd+&4000
                dump gnd.bank,&0000
 
 comm:          equ 224
@@ -16,8 +19,8 @@ dtrq:          equ 227
                ld de,&0402
 
 dos:           xor a
-               ld (dct),a
-               ld (svhl),hl
+               ld (dct+&4000),a
+               ld (svhl+&4000),hl
 
                ld a,e
                out (sect),a
@@ -45,7 +48,7 @@ dos4:          di
                ld b,20
 del2:          djnz del2
 
-               ld hl,(svhl)
+               ld hl,(svhl+&4000)
                ld bc,dtrq
                jr dos6
 
@@ -64,9 +67,9 @@ dos6:          in a,(comm)
                and &1c
                jr z,dos8
 
-               ld a,(dct)
+               ld a,(dct+&4000)
                inc a
-               ld (dct),a
+               ld (dct+&4000),a
                push af
                and 2
                jr z,dos7
@@ -107,20 +110,22 @@ dos8:          dec hl
 
                ret
 
+               org $ - &4000
+
 dvar:          equ $
 
 rbcc:          defb 7
 traks1:        defb 128+80
-traks2:        defb 128+80
+traks2:        defb 0
 stprat:        defb 0
 stprt2:        defb 0
 chdir:         defb &20
 nstat:         defb 1
-vers:          defb 01
+vers:          defb 20
 
-size1:         defb 2
-size2:         defb 3
-szea:          defb 0
+size1:         defb 80
+size2:         defb 0 
+szea:          defb 12
 lfeed:         defb 1
 lmarg:         defb 0
 graph:         defb 1
@@ -175,6 +180,10 @@ crite:         defb &7e,&81,&bd,&a1
 gcc1:          defb &1b,&2a,&05,&40
                defb &02,&80,&80,&80
 
+; <noise>
+               defm "UTPUT DIFA TO ROMUIFA"
+               defb &00,&00,&00,&80,&30,&00
+; </noise>
 
                org gnd+&0100
                dump gnd.bank,&0100
@@ -182,24 +191,24 @@ gcc1:          defb &1b,&2a,&05,&40
                defm "BOO"
                defb "T"+&80
 
-entsp:         defw 0
+entsp:         defw &7ffa
 snprt0:        defb &1f
 snprt1:        defb 2
-snprt2:        defb 0
+snprt2:        defb &1e
 snpsva:        defb 0
 
-svhdr:         defw 0
-cchad:         defw 0
-cnt:           defw 0
+svhdr:         defw &4b00
+cchad:         defw &9f34
+cnt:           defw &0058
 
-dsc:           defb 0
+dsc:           defb rtrk
 dct:           defb 0
 dst:           defb 0
-               defs 7
+               defb &80,&32,&00,&02,&4c,&44,&07
 nbot:          defb 0
 rcmr:          defb 0
 count:         defb 0
-sva:           defb 0
+sva:           defb 13
 svc:           defb 0
 samcnt:        defb 0
 rmse:          defb 0
@@ -209,60 +218,71 @@ svdpt:         defw 0
 svtrs:         defw 0
 svbuf:         defw 0
 svcnt:         defw 0
-hldi:          defw 0
-ptrscr:        defw 0
+hldi:          defw &0044
+ptrscr:        defw ftadd
 
 port1:         defb 0
-port2:         defb 0
+port2:         defb &1f
 port3:         defb 0
 
-tstr1:         defb 0
-ostr1:         defb 0
-cstr1:         defb 0
-hstr1:         defb 0
+cstr1:         defb &1d
+tstr1:         defb &ff
+               defb &ff
+               defb &ff
+hstr1:         defb &ff
 
-dstr1:         defb 0
-fstr1:         defb 0
-sstr1:         defb 0
-lstr1:         defb 0
-nstr1:         defb 0
-               defs 14
-hd001:         defb 0
-hd0b1:         defw 0
-hd0d1:         defw 0
-hd0f1:         defw 0
+dstr1:         defb 1
+fstr1:         defb &ff
+sstr1:         defb &ff
+lstr1:         defb "D"
+nstr1:         defb &13
+               defm "samdos2       "
+hd001:         defb &13
+hd0b1:         defw &2710
+hd0d1:         defw &8009
+hd0f1:         defw &ffff
 pges1:         defb 0
-page1:         defb 0
+page1:         defb &7d
 
-dstr2:         defb 0
-fstr2:         defb 0
-sstr2:         defb 0
-lstr2:         defb 0
-nstr2:         defb 0
-               defs 14
-hd002:         defb 0
-hd0b2:         defw 0
-hd0d2:         defw 0
-hd0f2:         defw 0
-pges2:         defb 0
-page2:         defb 0
+dstr2:         defb &ff
+fstr2:         defb &ff
+sstr2:         defb &ff
+lstr2:         defb &ff
+nstr2:         defb &ff
+               defb &ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff
+hd002:         defb &ff
+hd0b2:         defw &ffff
+hd0d2:         defw &ffff
+hd0f2:         defw &ffff
+pges2:         defb &ff
+page2:         defb &ff
 
-nstr3:         defb 0
-               defs 14
-
-uifa:          defb 0
-               defs 47
-
+nstr3:         defb &ff
+               defb &ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff
+               
+uifa:          defb &13
+               defm "samdos2                  "
+               defb &ff,&ff,&ff,&ff,&ff
+               defb &7d
+               defb &09
+               defb &80
+               defb &00
+               defb &10
+               defb &27
+               defb &ff
+               defb &ff
+               defb &ff
+               defb &00,&00,&00,&00,&00,&00,&00,&00
+               
 difa:          defb 0
-               defs 47
+               defb &00,&80,&43,&00,&02,&4c,&44,&03,&42,&2c,&30,&00,&80,&44,&00,&02
+               defb &4c,&44,&03,&43,&2c,&41,&00,&80,&45,&00,&03,&41,&44,&44,&05,&48
+               defb &4c,&2c,&42,&43,&00,&80,&46,&00,&02,&4c,&44,&04,&42,&2c,&34
 
-hka:           defb 0
-hkhl:          defw 0
-hkde:          defw 0
-hkbc:          defw 0
-
-xpt:           defw 0
-xtch:          defw 0
+hka:           defb &44
+hkhl:          defw &4b1f
+hkde:          defw &4b25
+hkbc:          defw &0202
 
 snme:          defb &13
                defm "SNAP          "
@@ -272,6 +292,9 @@ snadd:         defw 16384
                defw 0
                defw &ffff
 
+; <noise>
+               defm "CALL"
+; </noise>
 
 size:          equ zzend-gnd+&0220
 
@@ -285,12 +308,29 @@ size:          equ zzend-gnd+&0220
 
                jp syntax
 
-               jp &50d4
+               jp nmi
+
+; <noise>
+               defm "DEFW"
+               defb &06
+               defm "NR"
+; </noise>
 
                org gnd+&0210
                dump gnd.bank,&0210
 
                defw errtbl+&4000
+
+; <noise>
+               defm "TE"
+               defb &00,&80
+               defm "Q"
+               defb &00,&03
+               defm "INC"
+               defb &02
+               defm "HL"
+               defb &00
+; </noise>
 
                org gnd+&0220
                dump gnd.bank,&0220
@@ -306,6 +346,8 @@ synt1:         ld (cstr1),a
                call setbit
                call resreg
 
+               ld hl,0
+               ld (hksp),hl
                xor a
                ld (flag3),a
                ld ix,dchan
@@ -335,9 +377,6 @@ synt1:         ld (cstr1),a
                cp &92         ;erase
                jp z,eraz
 
-               cp &93         ;move
-               jp z,move
-
                cp &86         ;write
                jp z,write
 
@@ -346,12 +385,6 @@ synt1:         ld (cstr1),a
 
                cp &b8         ;read
                jp z,read
-
-               cp &98         ;open
-               jp z,open
-
-               cp &99         ;close
-               jp z,close
 
                cp &cf         ;copy
                jp z,copy
@@ -399,6 +432,8 @@ hook:          ld (entsp),sp
                ex af,af'
                exx
                call setbit
+               ld hl,0
+               ld (hksp),hl
                scf
                sbc 127
                jp c,rep17
@@ -452,7 +487,7 @@ samhk:         defw init      ;128
                defw s         ;133
                defw hopen     ;134
                defw hclos     ;135
-               defw init      ;136
+               defw initx     ;136
                defw hdir      ;137
                defw s         ;138
                defw hvar      ;139

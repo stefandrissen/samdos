@@ -15,14 +15,12 @@
 			<filesmatch file1="${file1}" file2="${file2}" />
 		</condition>
 
-		<fail message="compiled file '${file1}' does not match reference binary '${file2}'" unless:true="${identical}" />
-
-		<!-- for binary compare
-			<exec executable="${cmp}">
+		<exec executable="${cmp}" unless:true="${identical}">
 			<arg value="${file1}" />
 			<arg value="${file2}" />
-		</exec> 
-		-->
+		</exec>
+
+		<fail message="compiled file '${file1}' does not match reference binary '${file2}'" unless:true="${identical}" />
 
 	</target>
 
@@ -30,6 +28,7 @@
 
 		<exec executable="${python}" failonerror="true">
 			<arg value="${pyz80}" />
+			<arg value="--mapfile=obj/samdos2.map" />
 			<arg value="--obj=obj/samdos2" />
 			<arg value="src/samdos.s" />
 		</exec>

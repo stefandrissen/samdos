@@ -429,7 +429,14 @@ conr4:         add &30
 
 derr:          call bcr
 
-               ld a,d
+               ld hl,(hksp)
+               ld a,h
+               or l
+               jr z,derr1
+               ld sp,hl
+               ret
+
+derr1:         ld a,d
                call conr
                ld (prtrk),a
                ld (fmtrk),a
@@ -472,25 +479,25 @@ errtbl:        defm "Nonsense in "
                defm "TRK-"
 prtrk:         defb &20
                defb &20
-               defb &20
+               defb "0"
                defm ",SCT-"
 prsec:         defb &20
-               defb &20
-               defm ",erro"
+               defb "5"
+               defm ",Erro"
                defb "r"+&80
 
                defm "Format TRK-"
 fmtrk:         defb &20
                defb &20
-               defb &20
+               defb "0"
                defm " los"
                defb "t"+&80
 
-               defm "Check disc in "
+               defm "Check disk in "
                defm "driv"
                defb "e"+&80
 
-               defm "No 'BOOT' fil"
+               defm "No ""BOOT"" fil"
                defb "e"+&80
 
                defm "Invalid file nam"
@@ -531,7 +538,7 @@ fmtrk:         defb &20
                defm "a read fil"
                defb "e"+&80
 
-               defm "No AUTO* fil"
+               defm "no AUTO* fil"
                defb "e"+&80
 
                defm "Network of"
@@ -540,13 +547,13 @@ fmtrk:         defb &20
                defm "No such driv"
                defb "e"+&80
 
-               defm "Disc is write "
+               defm "Disk is write "
                defm "protecte"
                defb "d"+&80
 
                defm "Not enough space "
                defm "on dis"
-               defb "c"+&80
+               defb "k"+&80
 
                defm "Directory ful"
                defb "l"+&80
@@ -635,6 +642,11 @@ snap3c:        in e,(c)
                bit 2,e
                jr z,snap3c
 
+               ld bc,0
+snap3d:        dec bc
+               ld a,b
+               or c
+               jr nz,snap3d
 
                ld a,(snprt0)
                out (251),a

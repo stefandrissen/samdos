@@ -28,12 +28,23 @@ call1:         cp 1
 ;DISC COPY ROUTINE
 
 copy:          call gtnc
-               call evnam
+               cp &a6         ;over
+               jr nz,copy0a
+               call setf1
+               call gtnc
+copy0a:        call evnam
                cp &8e         ;to
                jp nz,rep2
                call gtnc
                call evnam2
                call ceos
+
+               ld a,0
+               call bitf1
+               jr nz,l572d
+               ld a,&0f
+l572d:         call nrwr
+               defw &5bb9     ;"SAVE OVER" flag used by DOS. Zero if SAVE OVER, else non-zero
 
                ld hl,nstr1+1
                call evfile
@@ -74,10 +85,11 @@ copy2:         call gdifa
 
                call trx
                call ofsm
+               jr c,copy3
                call gtcop
                call svblk
                call cfsm
-               call setf0
+copy3:         call setf0
                call bitf5
                call nz,tspce2
                jr copy1
@@ -85,10 +97,13 @@ copy2:         call gdifa
 
 gtcop:         ld a,3
                out (251),a
-               ld hl,&8000
                ld a,(difa+34)
                ld (pges1),a
+               ld hl,9
                ld de,(difa+35)
+               add hl,de
+               ex de,hl
+               ld hl,&8000
                ret
 
 
@@ -208,7 +223,7 @@ eraz1:         call evnam
                call evfile
                call ckdisc
 
-eraz3:         call fndfl
+eraz3:         call fndflx
                jr nc,eraz5
                call bitf1
                jr nz,eraz4
@@ -246,15 +261,20 @@ fndf1:         xor a
 fndf2:         call rsad
                ld (fndts),de
 
-fndf3:         call clrrpt
                ld a,(fndfr)
                ld (ix+rpth),a
-               call grpnt
+               call point
                ld a,(hl)
                and a
-               jr z,fndf4
+               jr nz,fndf3
 
-               call cknam
+               inc hl
+               ld a,(hl)
+               and a
+               jr nz,fndf4
+               ret
+
+fndf3:         call cknam
                jr nz,fndf4
                scf
                ret
@@ -327,7 +347,7 @@ prot:          ld a,&40
 
 ;HIDE FILE ROUTINE
 
-hide:          ld a,&80
+hide:          ld a,&c0
 
 sfbt:          ld (hstr1),a
                call gtnc
@@ -343,7 +363,7 @@ sfb1:          call evnam
                call evfile
                call ckdisc
 
-sfb2:          call fndfl
+sfb2:          call fndflx
                jr c,sfb3
                call bitf0
                jp z,rep26
@@ -380,7 +400,7 @@ separ:         cp ","
                jr z,sepa1
                cp ";"
                jr z,sepa1
-               cp ""
+               cp """"
                ret
 
 sepa1:         call gtnc
@@ -481,7 +501,24 @@ ldhd1:         call lbyt
 
 load:          call gtixd
                call gtnc
-               call evnum
+               call cfso
+               jr nz,load3
+
+               push bc
+               pop hl
+load1:         ld a,(hl)
+               cp &0e
+               jr nz,load2
+               ld bc,6
+               call cmr
+               defw &0163     ; JRECLAIM
+
+load2:         ld a,(hl)
+               inc hl
+               cp &0d
+               jr nz,load1
+
+load3:         call evnum
 
                push af
                ld a,c
@@ -640,8 +677,8 @@ wfod3:         call pmo6
 
 ckdisc:        ld a,(lstr1)
                cp "D"
-               ret z
-               jp rep10
+               jp nz,rep10
+               jp ckdrv
 
 ;EVALUATE DRIVE NUMBER
 
@@ -684,8 +721,48 @@ evnum:         call cmr
                ret
 
 
-               org &5bc8
-               dump gnd.bank,&1bc8
+;FIND A FILE IN THE DIRECTORY - for ERASE / HIDE / PROTECT
+
+fndflx:        call bitf2
+               jr nz,fndflx3
+               call setf2
+               ld ix,dchan
+               xor a
+               ld (ix+4),a
+               call rest
+
+fndflx1:       call rsad
+               ld (svtrs),de
+
+fndflx2:       call point
+               ld a,(ix+rpth)
+               ld (svdpt),a
+               ld a,(hl)
+               and a
+               jr z,fndflx3
+               call cknam
+               jr nz,fndflx3
+               scf
+               ret
+
+fndflx3:       ld a,(svdpt)
+               ld (ix+rpth),a
+               cp 1
+               jr z,fndflx4
+               call clrrpt
+               inc (ix+rpth)
+               jr fndflx2
+               
+fndflx4:       ld de,(svtrs)
+               call isect
+               jr nz,fndflx1
+               inc d
+               ld a,d
+               cp 4
+               ret nc
+               jr fndflx1
+
+
 
 
 ;EVALUATE CHANNEL SPECIFIER

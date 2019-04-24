@@ -128,9 +128,9 @@ wram:          equ 275
 
 str:           equ gnd+&3efe
 
-sam:           equ gnd+&3800
+sam:           equ gnd+&370f
 
-dchan:         equ sam+195
+dchan:         equ sam+241
 svbc:          equ dchan
 svde:          equ dchan+2
 rfdh:          equ dchan+4

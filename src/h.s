@@ -9,7 +9,7 @@ rxhed:         push bc
                push de
                push hl
 
-               ld hl,&4b00
+               ld hl,(svhdr)
                ld b,48
                ld de,uifa
 
@@ -56,13 +56,13 @@ txrm1:         ld a,(de)
                ret
 
 
-init:          jp hauto
-
-
 hgthd:         call rxhed
                call ckdrv
                call gtixd
                call gtfle
+               ld de,(difa+35)
+               set 7,d
+               ld (difa+35),de
                call txhed
                ret
 
@@ -144,18 +144,20 @@ hsave:         call setf3
 
                call gtixd
                call ofsm
+               jr c,hsave1
                call svhd
                ld hl,(hd0d1)
                ld de,(hd0b1)
                call svblk
                call cfsm
 
-               ld a,(port3)
+hsave1:        ld a,(port3)
                out (251),a
                ret
 
-
-hdir:          ret
+hdir:          call rxhed
+               ld a,(hka)
+               jp pcat
 
 hopen:         ret
 
@@ -210,6 +212,12 @@ autnam:        defb 1
                defw &ffff
 
 
+init:          nop
+initx:         ld a,&95   ; LOAD
+               call nrwr
+               defw &5b74 ; Current Basic command.                
+
+
 ;LOOK FOR AN AUTO FILE
 
 
@@ -233,6 +241,7 @@ hauto:         ld hl,autnam
 
 hofle:         call rxhed
                call ofsm
+               ret c
                call svhd
                ret
 
@@ -267,9 +276,6 @@ hrsad:         ld a,(hka)
                call rsad
                ld de,dram
                ld bc,512
-               call sze
-               jr z,hrsd1
-               ld bc,1024
 hrsd1:         ld hl,(hkhl)
                call cals
                ex de,hl
@@ -286,9 +292,6 @@ hwsad:         ld a,(hka)
                call ckdrx
                ld de,dram
                ld bc,512
-               call sze
-               jr z,hwsd1
-               ld bc,1024
 hwsd1:         ld hl,(hkhl)
                call cals
                ldir
@@ -441,71 +444,5 @@ evfl6:         ldir
                cp "D"
                ret z
                jp rep10
-
-;this code not working
-
-               call nrwr
-               defw &5bb7
-               ld a,(dstr1)
-               cp 3
-               jr nc,evfl8
-               ld a,112
-
-evfl8:         call nrwr
-               defw &5bb8
-
-               ld hl,nstr1+1
-               ld a,(hl)
-               cp &20
-               jr nz,evfl8a
-               ld a,&ff
-               ld (uifa+1),a
-               jr evfl8b
-
-evfl8a:        ld de,uifa+1
-               ld bc,14
-               ldir
-
-evfl8b:        call txinf
-
-               call bitf3
-               jr nz,cspc1
-               ld sp,(entsp)
-               pop bc
-               pop hl
-               push hl
-               push bc
-               set 7,h
-               res 6,h
-               xor a
-               out (251),a
-               ld (hl),8
-               inc hl
-               ld (hl),&e3
-               jp ends
-
-cspc1:         call nrrd
-               defw &5a33
-               rra
-               rra
-               jr c,cspc4
-
-               call cmr
-               defw clslow
-               call pmo1
-               call beep
-
-cspc2:         call cmr
-               defw rdkey
-               jr nc,cspc2
-cspc3:         call cmr
-               defw rdkey
-               jr c,cspc3
-               call cmr
-               defw clslow
-
-cspc4:         ld e,2
-               jp end1
-
 
 zzend:         equ $

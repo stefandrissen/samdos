@@ -16,22 +16,25 @@ dfmta:         push bc
 
                call getscr
 
-fmt1:          ld hl,ftadd
-               call dmt1
-
                push de
                call cmr
                defw clslow
                call pmoa
                pop de
-               push de
+
+fmt1:          ld hl,ftadd
+               call dmt1
+
                call sctrk
-               pop de
+               call svint
+               call commp
+               push bc
 
 fmt3:          ld c,wtrk
                call precmp
+               pop bc
                ld hl,ftadd
-               call wrdata
+               call wsa3
                call stpdel
                inc d
 
@@ -45,15 +48,9 @@ fmt3:          ld c,wtrk
                dec e
                jr nz,fmt4
                ld e,10
-               call sze
-               jr z,fmt4
-               ld e,5
 fmt4:          dec e
                jr nz,fmt5
                ld e,10
-               call sze
-               jr z,fmt5
-               ld e,5
 fmt5:          jp fmt1
 
 fmt6:          call restx
@@ -75,10 +72,7 @@ fmt8:          push de
                defw clslow
                call pmob
                pop de
-               push de
                call sctrk
-               pop de
-
                ld a,(dstr2)
                call ckdrx
                ld hl,ftadd
@@ -86,9 +80,6 @@ fmt8:          push de
 fmt9:          ld (buf),hl
                call rsad
                ld bc,512
-               call sze
-               jr z,fmt9a
-               ld bc,1024
 fmt9a:         add hl,bc
                call isect
                jr nz,fmt9
@@ -100,9 +91,6 @@ fmt9a:         add hl,bc
 fmt10:         ld (buf),hl
                call wsad
                ld bc,512
-               call sze
-               jr z,fmt10a
-               ld bc,1024
 fmt10a:        add hl,bc
                call isect
                jr nz,fmt10
@@ -114,21 +102,20 @@ fmt10a:        add hl,bc
                ld (buf),hl
                jr fmt12
 
-
-fmt11:         call rsad
-               call isect
-               jr nz,fmt11
-
 fmt11a:        push de
                call cmr
                defw clslow
                call pmoc
+               di
                pop de
-               push de
-               call sctrk
-               pop de
+               jr fmt11c
+
+fmt11b:        call rsad
+               call isect
+               jr nz,fmt11b
+fmt11c:        call sctrk
                call itrck
-               jr nz,fmt11
+               jr nz,fmt11b
 
 fmt12:         call cmr
                defw clslow
@@ -140,19 +127,17 @@ fmt12:         call cmr
 
 ;PRINT TRACK ON SCREEN
 
-sctrk:         ld a,d
-               bit 7,a
-               jr z,strk1
-               and &7f
-               ld b,a
-               call tstd
-               and &7f
-               add b
-
-strk1:         ld l,a
+sctrk:         push de
+               ld a,&15
+               call nrwr
+               defw &5a6e ; Lower window position as column/row.
+               ld l,d
                ld h,0
                ld a,&20
-               jp pnum3
+               call pnum3
+               di
+               pop de
+               ret
 
 
 ;INCREMENT TRACK
@@ -175,9 +160,6 @@ itrck:         inc d
 dmt1:          ld bc,&3c4e
                call wfm
                ld b,10
-               call sze
-               jr z,dmt2
-               ld b,5
 dmt2:          push bc
                ld bc,&0c00
                call wfm
@@ -201,9 +183,6 @@ dmt2:          push bc
                ld b,&01
                call wfm
                ld bc,&0102
-               call sze
-               jr z,dmt3
-               ld bc,&0103
 dmt3:          call wfm
                ld bc,&01f7
                call wfm
@@ -215,11 +194,6 @@ dmt3:          call wfm
                call wfm
                ld bc,&01fb
                call wfm
-               ld bc,0
-               call wfm
-               call wfm
-               call sze
-               jr z,dmt4
                ld bc,0
                call wfm
                call wfm
@@ -248,14 +222,6 @@ wfm:           ld (hl),c
 ;INCREMENT SECTOR ROUTINE
 
 isect:         inc e
-               call sze
-               jr z,isect1
-               ld a,e
-               cp 6
-               ret nz
-               ld e,1
-               ret
-
 isect1:        ld a,e
                cp 11
                ret nz
@@ -300,6 +266,7 @@ pnty3:         cp 19
                call grpnt
                call gtval
                inc c
+               res 5,c
                ex de,hl
                push de
                ld a,&20
@@ -512,13 +479,12 @@ pmo3:          call ptm
 
 pmo4:          call ptm
                defb &7f
-               defm " Sam Computers Lt"
-               defm "d.  Version  1"
+               defm " MILES GORDON TECHNOLOGY plc  1"
                defw &8d0d
 
 pmo5:          call ptm
                defm "OVERWRITE "
-               defb "'"+128
+               defb """"+128
 
 pmo6:          call ptm
                defm "Are you SURE ?"
@@ -526,7 +492,7 @@ pmo6:          call ptm
                defb ")"+128
 
 pmo7:          call ptm
-               defm "' (y/n"
+               defm """ (y/n"
                defb ")"+128
 
 pmo8:          call ptm
@@ -540,8 +506,8 @@ pmo9:          call ptm
                defb "y"+&80
 
 pmoa:          call ptm
-               defm "ALL FORMAT  AT "
-               defm "TRACK "
+               defm "Format disk at "
+               defm "track "
                defb " "+&80
 
 pmob:          call ptm

@@ -73,29 +73,30 @@ ldin1:         pop af
 precmx:        ld c,dwsec
 
 precmp:        call tstd
+               rra
+               and &3f
                ld b,a
-               srl b
                ld a,d
                and &7f
                sub b
-               jr nc,prec1
+               jp c,sadc
                res 1,c
-prec1:         jp sadc
+               jp sadc
 
 ;WRITE SECTOR AT DE
 
 wsad:          xor a
                ld (dct),a
 wsa1:          call ctas
-               call precmx
+               call svint
+               call commp
+               push bc
                call gtbuf
-               call wrdata
+               call precmx
+               pop bc
+               call wsa3
                call cdec
                jr wsa1
-
-wrdata:        call svint
-               call commp
-               jr wsa3
 
 wsa2:          inc c
                inc c
@@ -137,7 +138,6 @@ wsa3:          in a,(c)
                call ldint
                bit 6,a
                ret z
-               call decsam
                jp rep23
 
 
@@ -196,6 +196,65 @@ rsa3:          in a,(c)
                jr nz,rsa3
 
                jp ldint
+
+; called by FILE DIR HAND/ROUT instead of rsad
+
+rsadx:         xor a
+               ld (dct),a
+rsadx1:        call ctas            ; confirm track and seek
+               ld c,drsec
+               call sadc            ; send a disk command
+               call gtbuf           ; -> hl
+               exx
+               ld l,255
+               ld d,&77
+               exx
+               push de
+               call rsadx2
+               call ldint           ; load interrupt status
+               pop de
+               rlca
+               call cdec            ; check disc err count
+               jr rsadx1
+
+rsadx2:        call svint           ; save interrupt status
+               call commp           ; put disk command in c
+               ld a,c
+               ld (comm.port.1+1),a
+               ld (comm.port.2+1),a
+               add a,3
+               ld (dtrq.port+1),a
+               ld b,2
+               jr comm.port.2
+
+rsadx3:        ld h,d
+               and a
+               jr nz,rsadx4
+
+               ld h,a
+rsadx4:        exx
+comm.port.1:   in a,(comm)
+               and b
+               jr z,comm.port.2
+
+dtrq.port:     in a,(dtrq)
+               ld (hl),a
+               inc hl
+               exx
+               inc l
+               jr z,rsadx3
+
+               or (hl)
+               ld (hl),a
+               exx
+
+comm.port.2:   in a,(comm)
+               rrca
+               ret nc
+               rra
+               jp nc,comm.port.2
+
+               jp dtrq.port
 
 
 ;CHECK DISC ERR COUNT
@@ -420,19 +479,6 @@ ckdrx:         cp 1
 ckdv1:         ld (drive),a
                ret
 
-sze:           push hl
-               ld (szea),a
-               ld hl,size1
-               ld a,(drive)
-               cp 1
-               jr z,sze1
-               inc hl
-sze1:          ld a,(hl)
-               cp 2
-               ld a,(szea)
-               pop hl
-               ret
-
 
 ;SELECT DISC AND SIDE
 
@@ -477,11 +523,6 @@ tfbf:          call grpnt
                ld a,c
                cp 254
                ret nz
-               call sze
-               jr z,tfbf1
-               ld a,b
-               cp 3
-               ret
 
 tfbf1:         ld a,b
                cp 1
@@ -572,9 +613,6 @@ ldb4:          call ctas
                exx
                call commp
                ld de,510
-               call sze
-               jr z,ldb4a
-               ld de,1022
 ldb4a:         ld hl,(svhl)
                jr ldb6
 
@@ -643,9 +681,6 @@ ldb8:          call ldint
 
 ccnt:          ld hl,(svde)
                ld bc,510
-               call sze
-               jr z,ccnta
-               ld bc,1022
 ccnta:         scf
                sbc hl,bc
                ret nc
@@ -765,9 +800,6 @@ svb4:          call ctas
                exx
                ld hl,(svhl)
                ld de,510
-               call sze
-               jr z,svb4a
-               ld de,1022
 svb4a:         call commp
                jr svb6
 
@@ -872,10 +904,6 @@ fns1:          ld a,(hl)
                ld a,e
                add 8
                ld e,a
-               call sze
-               jr z,fns1a
-               sub 5
-               jr fns1b
 fns1a:         sub 10
 fns1b:         jr c,fns2
                jr z,fns2
@@ -958,7 +986,7 @@ fdhr:          ld ix,dchan
                xor a
                ld (svdpt),a
                call rest
-fdh1:          call rsad
+fdh1:          call rsadx
 fdh2:          call point
                ld a,(hl)
                and a
@@ -1080,36 +1108,18 @@ fdha:          call cknam
 
 ;LOAD SAM FROM FILES USED
 
-fdhb:          bit 5,(ix+4)
-               jr z,fdhd
-               push ix
-               ld (ix+rptl),15
-               call grpnt
-               ld ix,sam
-               ld b,195
-
-fdhc:          ld a,(ix)
-               or (hl)
-               ld (ix),a
-               inc ix
-               inc hl
-               djnz fdhc
-               pop ix
+fdhb:          nop
 
 ;CALCULATE NEXT DIRECTORY ENTRY
 
 fdhd:          ld a,(ix+rpth)
-               call sze
-               jr z,fdhd1
-               cp 3
-               jr fdhd2
 fdhd1:         cp 1
 fdhd2:         jr z,fdhe
+               call clrrpt
                inc (ix+rpth)
                jp fdh2
 
-fdhe:          call clrrpt
-               call isect
+fdhe:          call isect
                jp nz,fdh1
                inc d
                ld a,d
@@ -1124,7 +1134,13 @@ fdhf:          ld a,(ix+4)
                cpl
                bit 6,a
                ret z
-               jr fdhd
+
+               inc hl
+               ld a,(hl)
+               and a
+               jr nz,fdhd
+               inc a
+               ret
 
 
 ;CHECK FILE NAME IN DIR
@@ -1167,16 +1183,6 @@ cknm6:         ld a,(hl)
 ;OPEN FILE SECTOR ADDRESS MAP
 
 ofsm:          push ix
-
-;TEST FOR SAM ALREADY OPEN
-
-;      LD   A,(SAMCNT)
-;      CP   0
-;      LD   A,10h
-;      JR   NZ,OFM2
-
-;SAM NOT OPEN SO CLEAR IT
-
                ld hl,sam
                ld b,195
 ofm1:          ld (hl),0
@@ -1195,15 +1201,23 @@ ofm2:          call fdhr
                and a
                jr z,ofm3
 
+               push ix
                call cmr
                defw clslow
                call pmo5
+               pop ix
+
+               push ix
                call pfnme
                call pmo7
                call cyes
+               pop ix
                jr z,ofm3
 
-               jp ends
+               pop de
+               pop ix
+               scf
+               ret
 
 ofm3:          pop de
                call point
@@ -1242,9 +1256,6 @@ ofm5:          ld (ix+ffsa),0
                ld (ix+ftrk),d
                ld (ix+fsct),e
                call clrrpt
-               ld a,(samcnt)
-               inc a
-               ld (samcnt),a
                xor a
                ret
 
@@ -1255,12 +1266,7 @@ ofm6:          ld a,(hl)
                djnz ofm6
                ret
 
-decsam:        push af
-               ld a,(samcnt)
-               dec a
-               ld (samcnt),a
-               pop af
-               ret
+decsam:        ret
 
 
 ;COMPARE FOR Y or N
@@ -1272,6 +1278,9 @@ cyes1:         call cmr
                and &df
                cp "Y"
                push af
+cyes2:         call cmr
+               defw rdkey
+               jr c,cyes2
                call cmr
                defw clslow
                pop af
@@ -1299,10 +1308,6 @@ cfsm:          call grpnt
                and a
                jr nz,cfm1
                ld a,b
-               call sze
-               jr z,cfsm1
-               cp 4
-               jr cfsm2
 cfsm1:         cp 2
 cfsm2:         jr z,cfm2
 cfm1:          ld (hl),0
@@ -1406,13 +1411,21 @@ gtfl5:         ld (hl),a
                jr nz,gtfl5a
                ld a,(hl)
                cp &14
-               jr nz,gtfl5a
+               jr nz,gtfl5c
                dec a
-               ld (hl),a
+               jr gtfl5b
 
-gtfl5a:        ld a,(nstr1)
+gtfl5a:        cp &14
+               jr nz,gtfl5c
+               ld a,(hl)
+               cp &13
+               jr nz,gtfl5c
+               inc a
+gtfl5b:        ld (hl),a
+
+gtfl5c:        ld a,(nstr1)
                cp (hl)
-               jp nz,rep26
+               jp nz,rep13
 
                ld de,hd002
                ld (ix+rptl),211
