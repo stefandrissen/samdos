@@ -1,5 +1,5 @@
 
-; boots at &8000, normally at &4000 
+; boots at &8000, normally at &4000
 
                org gnd+&4000
                dump gnd.bank,&0000
@@ -9,11 +9,26 @@ trck:          equ 225
 sect:          equ 226
 dtrq:          equ 227
 
+if defined (include-header)
+
+    ; disk file header
+
                defb 3
                defw 0
                defw 0
                defw 0
-               defw 0
+               defb 0
+               defb 0
+
+    org.adjust: equ 0
+
+else
+
+    org.adjust: equ 9
+
+               org $ + org.adjust
+
+endif
 
                ld hl,&8000+510
                ld de,&0402
@@ -124,7 +139,7 @@ nstat:         defb 1
 vers:          defb 20
 
 size1:         defb 80
-size2:         defb 0 
+size2:         defb 0
 szea:          defb 12
 lfeed:         defb 1
 lmarg:         defb 0
@@ -185,8 +200,8 @@ gcc1:          defb &1b,&2a,&05,&40
                defb &00,&00,&00,&80,&30,&00
 ; </noise>
 
-               org gnd+&0100
-               dump gnd.bank,&0100
+               org gnd + &0100
+               dump gnd.bank,&0100 - org.adjust
 
                defm "BOO"
                defb "T"+&80
@@ -259,7 +274,7 @@ page2:         defb &ff
 
 nstr3:         defb &ff
                defb &ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff,&ff
-               
+
 uifa:          defb &13
                defm "samdos2                  "
                defb &ff,&ff,&ff,&ff,&ff
@@ -273,7 +288,7 @@ uifa:          defb &13
                defb &ff
                defb &ff
                defb &00,&00,&00,&00,&00,&00,&00,&00
-               
+
 difa:          defb 0
                defb &00,&80,&43,&00,&02,&4c,&44,&03,&42,&2c,&30,&00,&80,&44,&00,&02
                defb &4c,&44,&03,&43,&2c,&41,&00,&80,&45,&00,&03,&41,&44,&44,&05,&48
@@ -301,8 +316,8 @@ size:          equ zzend-gnd+&0220
 
 ;MAIN PROGRAM ENTRY POINT
 
-               org gnd+&0200
-               dump gnd.bank,&0200
+               org gnd + &0200
+               dump gnd.bank,&0200 - org.adjust
 
                jp hook
 
@@ -316,8 +331,8 @@ size:          equ zzend-gnd+&0220
                defm "NR"
 ; </noise>
 
-               org gnd+&0210
-               dump gnd.bank,&0210
+               org gnd + &0210
+               dump gnd.bank,&0210 - org.adjust
 
                defw errtbl+&4000
 
@@ -332,8 +347,8 @@ size:          equ zzend-gnd+&0220
                defb &00
 ; </noise>
 
-               org gnd+&0220
-               dump gnd.bank,&0220
+               org gnd + &0220
+               dump gnd.bank,&0220 - org.adjust
 
 ;TEST FOR CODE ON ERROR
 
